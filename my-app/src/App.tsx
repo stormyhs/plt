@@ -1,6 +1,11 @@
 import React from 'react'
-import { Login } from './Login'
 import Home from './Home'
+import {Login} from './Login'
+import Storage from './Storage'
+import Network from './Network'
+import Internet from './Internet'
+import Logs from './Logs'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 class App extends React.Component{
     constructor(props: any){
@@ -11,7 +16,17 @@ class App extends React.Component{
         return(
             localStorage.getItem("username")
             ?
-            <Home/>
+            <BrowserRouter>
+              <Routes>
+              <Route index element={<Home />} />
+              <Route path="system" element={<Home />} />
+              <Route path="storage" element={<Storage />} />
+              <Route path="network" element={<Network />} />
+              <Route path="internet" element={<Internet />} />
+              <Route path="logs" element={<Logs />} />
+              </Routes>
+            </BrowserRouter>
+            // <Home/>
             :
             <Login/>
         )

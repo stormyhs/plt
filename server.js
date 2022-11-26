@@ -27,7 +27,7 @@ app.use(cors({
 app.post('/api/news', async (req, res) =>{
     console.log(`Request: ${JSON.stringify(req.body)}`)
     res.end(JSON.stringify({"news": ["The rewrite has begun.", "Google's UI has been stolen."], "status": [{severity: "info", message: "Account merge is in progress."}]}))
-    // res.end(JSON.stringify({"news": ["The rewrite has begun.", "Google's UI has been stolen."]}))
+    // res.end(JSON.stringify({}))
 })
 
 app.post('/api/login', async (req, res) =>{

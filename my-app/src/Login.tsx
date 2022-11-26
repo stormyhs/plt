@@ -86,7 +86,7 @@ export class Login extends React.Component<{}, FuckOff>{
     })
 
     return(
-        <div style={{marginTop: "20%", display: "flex", justifyContent: "center"}}>
+        <div style={{marginTop: "15%", display: "flex", justifyContent: "center"}}>
             <div>
                 <h1 style={{textAlign: "center"}}>{this.state.login ? "Log in" : "Sign up"}</h1>
                 <CssTextField autoFocus={true} id="username" variant="outlined" label="Username" InputProps={{style: {color: "white"}}}></CssTextField><br/><br/>
@@ -99,10 +99,18 @@ export class Login extends React.Component<{}, FuckOff>{
             <div style={{marginLeft: "200px", textAlign: "left"}}>
                 <h1> News </h1>
                 {
-                this.state.news.map((news: any) =>{
-                    return <h2>{news}</h2>
-                })
+                this.state.news != null && this.state.news.length != 0
+                ?
+                (<div>
+                    
+                    {this.state.news.map((news: any) =>{
+                        return <h2>{news}</h2>
+                    })}
+                </div>)
+                :
+                <h2>No news.</h2>
                 }
+
                 {
                 this.state.status != null && this.state.status.length != 0
                 ?

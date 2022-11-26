@@ -1,12 +1,19 @@
 body{
   background-color: black;
   color: white;
-  font-family: "Roboto", 'Courier New', Courier, monospace;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 a{
   color:white;
   text-decoration: none;
+}
+
+.topbar{
+  user-select: none;
+  display: grid;
+  grid-template-columns: 33% 33% 33%;
+  border-bottom: white solid 1px;
 }
 
 .clickable{
