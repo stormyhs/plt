@@ -10,7 +10,7 @@ class Topbar extends React.Component{
 		<div style={{margin: "0"}} className='topbar'>
 		<h1 style={{margin: "0"}}>{localStorage.getItem("username")}@localhost</h1>
 		<h1 style={{textAlign: "center", margin: "0"}}></h1>
-		<h1 style={{textAlign: "right", margin: "0"}}>smth here?</h1>
+		<h1 style={{textAlign: "right", margin: "0"}}>NIGGA HOST 2.0</h1>
 		</div>
 	)
 	}
