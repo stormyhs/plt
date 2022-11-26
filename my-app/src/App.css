@@ -1,0 +1,93 @@
+body{
+  background-color: black;
+  color: white;
+  font-family: "Roboto", 'Courier New', Courier, monospace;
+}
+
+a{
+  color:white;
+  text-decoration: none;
+}
+
+.clickable{
+  user-select: none;
+}
+
+.clickable:hover{
+  color: cyan;
+  cursor: pointer;
+}
+
+.clickable:active{
+  color: darkcyan;
+  cursor: pointer;
+}
+
+.file-list th{
+  padding: 0px 100px 0px 0px;
+}
+
+.file:hover{
+  color: grey;
+}
+
+.item{
+  padding-left: 10px;
+  border-left: solid;
+}
+
+.sidebar{
+  max-width: fit-content;
+  border-right: solid;
+}
+
+.sidebar-item:hover{
+  color: grey;
+}
+
+
+.history{
+  white-space: pre-line;
+  font-size: 2em;
+}
+
+.terminal{
+  font-family: "Courier New";
+  overflow-y: auto;
+  height: 50vh;
+  width: 35vw;
+  resize: both;
+  padding: 10px;
+  font-size: 2em;
+  border: solid;
+}
+
+.line{
+  display: table;
+  width: 100%;
+  font-size: 1em;
+}
+
+.terminal span{
+  display:table-cell; 
+  width:1px;
+}
+
+.terminal input{
+  display:table-cell; 
+  width:100%;
+  border: none;
+  background: black;
+  color: white;
+  outline: none;
+  font-size: 1em;
+}
+
+.contextMenu{
+  background-color: black;
+  border: white 1px solid;
+}
+
+.contextMenuItem{
+  margin: 5px;
+}
