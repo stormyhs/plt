@@ -30,14 +30,27 @@ app.post('/api/news', async (req, res) =>{
     // res.end(JSON.stringify({}))
 })
 
-app.post('/api/login', async (req, res) =>{
+app.post('/api/test', async (req, res) =>{
+    console.log(`Request: ${JSON.stringify(req.body)}`)
+    console.log(req.session)
+    if(req.session.test == null){
+        req.session.test = 1
+    } else{
+        req.session.test = req.session.test + 1
+    }
+    res.end(JSON.stringify({done: "done"}))
+})
+
+app.post('/api/login', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
     let body = await hdb.login(req.body.username, req.body.password)
+    console.log(body)
     if(body.type == "OK"){
+        console.log("LOGIN OK")
         req.session.login = true
         req.session.username = req.body.username
     }
-    res.end(body)
+    res.end(JSON.stringify(body))
 })
 
 app.post('/api/register', async function(req, res){
@@ -79,7 +92,8 @@ app.post('/api/user', async function(req, res){
 app.post('/api/storage', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
     if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({lol: "cum"}))
+        console.log(req.session)
+        res.end(JSON.stringify({error: "Invalid session ID."}))
         return
     }
     if(req.body.type == "get_files"){

@@ -10,6 +10,8 @@ import DesktopWindowsOutlinedIcon from '@mui/icons-material/DesktopWindowsOutlin
 import NoteAltOutlinedIcon from '@mui/icons-material/NoteAltOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 
 
 class Sidebar extends React.Component{
@@ -20,56 +22,88 @@ class Sidebar extends React.Component{
 		<mui.Paper elevation={0} style={{width: "125px", height: "100vh", borderRight: "white solid 1px"}}>
 		<mui.List style={{marginLeft: "0"}}>
     	
+      <Link to='/system'>
     	<mui.MenuItem>
           <mui.ListItemIcon>
           	<DesktopWindowsOutlinedIcon/>
           </mui.ListItemIcon>
-          <Link to='/system'><mui.ListItemText>System</mui.ListItemText></Link>
+          <mui.ListItemText>System</mui.ListItemText>
       </mui.MenuItem>
+      </Link>
 
+      <Link to='/storage'>
     	<mui.MenuItem>
           <mui.ListItemIcon>
           	<FolderOutlinedIcon/>
           </mui.ListItemIcon>
-          <Link to='/storage'><mui.ListItemText>Storage</mui.ListItemText></Link>
+          <mui.ListItemText>Storage</mui.ListItemText>
         </mui.MenuItem>
+      </Link>
 
+      <Link to='/editor'>
+      <mui.MenuItem>
+          <mui.ListItemIcon>
+            <EditOutlinedIcon/>
+          </mui.ListItemIcon>
+          <mui.ListItemText>Editor</mui.ListItemText>
+        </mui.MenuItem>
+      </Link>
+
+      <Link to='/network'>
     	<mui.MenuItem>
           <mui.ListItemIcon>
           	<LanOutlinedIcon/>
           </mui.ListItemIcon>
-          <Link to='/network'><mui.ListItemText>Network</mui.ListItemText></Link>
+          <mui.ListItemText>Network</mui.ListItemText>
         </mui.MenuItem>
+      </Link>
 
+      <Link to='/internet'>
     	<mui.MenuItem>
           <mui.ListItemIcon>
           	<CloudOutlinedIcon/>
           </mui.ListItemIcon>
-          <Link to='/internet'><mui.ListItemText>Internet</mui.ListItemText></Link>
+          <mui.ListItemText>Internet</mui.ListItemText>
         </mui.MenuItem>
+      </Link>
 
+      <Link to='/logs'>
     	<mui.MenuItem>
           <mui.ListItemIcon>
           	<NoteAltOutlinedIcon/>
           </mui.ListItemIcon>
-          <Link to='/logs'><mui.ListItemText>Logs</mui.ListItemText></Link>
+          <mui.ListItemText>Logs</mui.ListItemText>
         </mui.MenuItem>
+      </Link>
 
         <mui.Divider/>
 
+    <Link to='/profile'>
 		<mui.MenuItem>        
           <mui.ListItemIcon>
           	<AccountCircleOutlinedIcon/>
           </mui.ListItemIcon>
-          <Link to='/profile'><mui.ListItemText>{localStorage.getItem("username")}</mui.ListItemText></Link>
+          <mui.ListItemText>{localStorage.getItem("username")}</mui.ListItemText>
 		</mui.MenuItem>
+    </Link>
 		
+    <Link to='/help'>
 		<mui.MenuItem>        
           <mui.ListItemIcon>
           	<HelpOutlineOutlinedIcon/>
           </mui.ListItemIcon>
-          <Link to='/help'><mui.ListItemText>Help</mui.ListItemText></Link>
+          <mui.ListItemText>Help</mui.ListItemText>
 		</mui.MenuItem>
+    </Link>
+
+    <Link to='/logout'>
+    <mui.MenuItem>        
+          <mui.ListItemIcon>
+            <LogoutOutlinedIcon/>
+          </mui.ListItemIcon>
+          <mui.ListItemText>Log Out</mui.ListItemText>
+    </mui.MenuItem>
+    </Link>
 
 		</mui.List>
 		</mui.Paper>
