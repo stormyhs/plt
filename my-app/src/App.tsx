@@ -19,7 +19,7 @@ class App extends React.Component{
             <BrowserRouter>
               <Routes>
               <Route index element={<Home />} />
-              <Route path="system" element={<Home />} />
+              <Route path="home" element={<Home />} />
               <Route path="storage" element={<Storage />} />
               <Route path="network" element={<Network />} />
               <Route path="internet" element={<Internet />} />
