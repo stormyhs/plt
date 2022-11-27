@@ -19,7 +19,8 @@ class App extends React.Component{
             <BrowserRouter>
               <Routes>
               <Route index element={<Home />} />
-              <Route path="home" element={<Home />} />
+              <Route path="home" element={<Home />} /> {/*This one is after login*/}
+              <Route path="system" element={<Home />} /> {/*This one is the sidebar link*/}
               <Route path="storage" element={<Storage />} />
               <Route path="network" element={<Network />} />
               <Route path="internet" element={<Internet />} />

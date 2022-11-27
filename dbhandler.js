@@ -193,7 +193,7 @@ module.exports = {
             return JSON.stringify(body)
         }
         client.close()
-        return JSON.stringify({type: "OK", username: username})
+        return {type: "OK", username: username}
     },
 
     register: async function(username, password){
