@@ -12,8 +12,8 @@ class Topbar extends React.Component{
 	return(
 		<div style={{margin: "0"}} className='topbar'>
 		<h1 style={{margin: "0"}}>{localStorage.getItem("username")}@localhost</h1>
-		<h1 onClick={this.test.bind(this)} style={{textAlign: "center", margin: "0"}}>test</h1>
-		<h1 style={{textAlign: "right", margin: "0"}}>NIGGA HOST 2.0</h1>
+		<h1 onClick={this.test.bind(this)} style={{textAlign: "center", margin: "0"}}></h1>
+		<h1 style={{textAlign: "right", margin: "0",}}>pre-alpha build</h1>
 		</div>
 	)
 	}
