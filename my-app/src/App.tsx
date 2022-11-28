@@ -1,5 +1,5 @@
 import React from 'react'
-import Home from './Home'
+import System from './System'
 import {Login} from './Login'
 import Storage from './Storage'
 import Editor from './Editor'
@@ -22,9 +22,9 @@ class App extends React.Component{
             ?
             <BrowserRouter>
               <Routes>
-              <Route index element={<Home />} />
-              <Route path="home" element={<Home />} /> {/*This one is after login*/}
-              <Route path="system" element={<Home />} /> {/*This one is the sidebar link*/}
+              <Route index element={<System />} />
+              <Route path="home" element={<System />} /> {/*This one is after login*/}
+              <Route path="system" element={<System />} /> {/*This one is the sidebar link*/}
               <Route path="storage" element={<Storage />} />
               <Route path="editor" element={<Editor />} />
               <Route path="network" element={<Network />} />
