@@ -10,6 +10,7 @@ class File extends React.Component<{filename: string, content: string}, {}>{
   render(){
   return(
       <mui.Card style={{width: "17vw", marginLeft: "10px", marginTop: "10px"}}>
+        <Link to={"/editor?filename=" + this.props.filename}>
         <mui.CardActionArea>
           <mui.CardContent>
             <mui.Typography gutterBottom variant="h5" component="div">
@@ -21,6 +22,7 @@ class File extends React.Component<{filename: string, content: string}, {}>{
             </mui.Typography>
           </mui.CardContent>
         </mui.CardActionArea>
+        </Link>
         <mui.CardActions>
         {this.props.filename.split(".")[this.props.filename.split(".").length - 1] == "txt"
         ?
@@ -80,7 +82,7 @@ class Storage extends React.Component<{}, {files: any}>{
 	        ?
 	        (<>
 	            {this.state.files.map((file: any) =>{
-	                return <Link to={"/editor?filename=" + file.filename}> <File filename={file.filename} content={file.content}/> </Link>
+	                return  <><File filename={file.filename} content={file.content}/></>
 	            })}
 	        </>)
 	        :
