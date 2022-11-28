@@ -4,7 +4,7 @@ import Sidebar from './Sidebar'
 import * as mui from "@mui/material/"
 import Funcs from './Funcs'
 
-class Home extends React.Component<{}, {files: []}>{
+class System extends React.Component<{}, {files: []}>{
 
 
     render(){
@@ -27,4 +27,4 @@ class Home extends React.Component<{}, {files: []}>{
     }
 }
 
-export default Home;
+export default System;
