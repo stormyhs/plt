@@ -3,7 +3,7 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import * as mui from "@mui/material/"
 
-class Logs extends React.Component{
+class Profile extends React.Component{
 	render(){
 	return(
         <div>
@@ -24,4 +24,4 @@ class Logs extends React.Component{
 	}
 }
 
-export default Logs;
+export default Profile;

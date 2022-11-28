@@ -3,7 +3,7 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import * as mui from "@mui/material/"
 
-class Logs extends React.Component{
+class Help extends React.Component{
 	render(){
 	return(
         <div>
@@ -14,7 +14,11 @@ class Logs extends React.Component{
         <div style={{display: "flex"}}>
         <Sidebar />
 
-
+        <div style={{marginLeft:"20px"}}>
+            <h1>About</h1>
+            <h2>Project Leet</h2>
+            <h2>A hacker themed browser game.</h2>
+        </div>
 
         </div>
         </mui.Paper>
@@ -24,4 +28,4 @@ class Logs extends React.Component{
 	}
 }
 
-export default Logs;
+export default Help;
