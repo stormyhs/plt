@@ -11,6 +11,7 @@ import NoteAltOutlinedIcon from '@mui/icons-material/NoteAltOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 
 
 class Sidebar extends React.Component{
@@ -36,6 +37,15 @@ class Sidebar extends React.Component{
           	<FolderOutlinedIcon/>
           </mui.ListItemIcon>
           <mui.ListItemText>Storage</mui.ListItemText>
+        </mui.MenuItem>
+      </Link>
+
+      <Link to='/editor'>
+      <mui.MenuItem>
+          <mui.ListItemIcon>
+            <EditOutlinedIcon/>
+          </mui.ListItemIcon>
+          <mui.ListItemText>Editor</mui.ListItemText>
         </mui.MenuItem>
       </Link>
 
