@@ -2,11 +2,8 @@ import React from 'react'
 import Topbar from './Topbar'
 import Sidebar from './Sidebar'
 import * as mui from "@mui/material/"
-import Funcs from './Funcs'
 
 class System extends React.Component<{}, {files: []}>{
-
-
     render(){
         return(
             <div>

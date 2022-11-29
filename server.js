@@ -98,10 +98,14 @@ app.post('/api/storage', async function(req, res){
     }
     if(req.body.type == "get_files"){
         res.end(JSON.stringify(await hdb.get_value(req.body.username, "files")))
-    } else if(req.body.type == "remove_file"){
+    }
+
+    else if(req.body.type == "remove_file"){
         res.end(JSON.stringify(await hdb.remove_file(req.body.username, req.body.file)))
         await hdb.add_log(req.body.username, `localhost removed file ${req.body.file}`)
-    } else if(req.body.type == "add_file"){
+    }
+
+    else if(req.body.type == "add_file"){
         if(req.body.file.filename.endsWith(".exe")){
             res.end(JSON.stringify({type: "error", content: "Invalid file name."}))
             return
@@ -113,9 +117,12 @@ app.post('/api/storage', async function(req, res){
             await hdb.add_log(req.body.username, `localhost edited file ${req.body.file.filename}`)
         }
         res.end(JSON.stringify(await hdb.add_file(req.body.username, req.body.file)))
-    }  else if(req.body.type == "get_file"){
+    }
+
+    else if(req.body.type == "get_file"){
         res.end(JSON.stringify(await hdb.get_file(req.body.username, req.body.file)))
     }
+
     else{
         res.end(JSON.stringify({lol: "cum"}))
     }

@@ -8,14 +8,11 @@ import Internet from './Internet'
 import Logs from './Logs'
 import Profile from './Profile'
 import Help from './Help'
+import Logout from './Logout'
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 class App extends React.Component{
-    constructor(props: any){
-        super(props)
-    }
-
     render(){
         return(
             localStorage.getItem("username")
@@ -32,6 +29,7 @@ class App extends React.Component{
               <Route path="logs" element={<Logs />} />
               <Route path="profile" element={<Profile />} />
               <Route path="help" element={<Help />} />
+              <Route path="logout" element={<Logout />} />
               </Routes>
             </BrowserRouter>
             // <Home/>
