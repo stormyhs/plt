@@ -105,6 +105,11 @@ app.post('/api/storage', async function(req, res){
         await hdb.add_log(req.body.username, `localhost removed file ${req.body.file}`)
     }
 
+    else if(req.body.type == "rename_file"){
+        res.end(JSON.stringify(await hdb.rename_file(req.body.username, req.body.old, req.body.new)))
+        await hdb.add_log(req.body.username, `localhost renamed file ${req.body.old} to ${req.body.new}`)
+    }
+
     else if(req.body.type == "add_file"){
         if(req.body.file.filename.endsWith(".exe")){
             res.end(JSON.stringify({type: "error", content: "Invalid file name."}))
