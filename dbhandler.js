@@ -176,6 +176,36 @@ module.exports = {
         return {type: "OK"}
     },
 
+    rename_file: async function(user, oldName, newName){
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {username: user}
+        r = await collection.findOne(q)
+        if(r == null){
+            q = {ip: user}
+            r = await collection.findOne(q)
+            if(r == null){
+                return null
+            }
+        }
+        let new_files = []
+        r.files.forEach(function(element){
+            if(element.filename == oldName){
+                element.filename = newName
+            }
+            new_files.push(element)
+        })
+        data = {
+            $set:{
+                files: new_files
+            }
+        }
+        r = await collection.updateOne(q, data)
+        client.close()
+        return {type: "OK"}
+    },
+
     login: async function(username, password){
         const client = await MongoClient.connect(url, { useNewUrlParser: true })
         .catch(err => { console.log(err); });

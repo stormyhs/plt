@@ -72,24 +72,23 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
 
     async componentDidMount(){
         if(window.location.href.split("?").length > 1){
+            (document.getElementById("filename") as HTMLInputElement).setAttribute("disabled", "true");
             let params: any = window.location.href.split("?")[1]
             params = params.split("&")
             let filename = params[0].split("=")[1].replace("%20", " ")
-            console.log(filename)
+
             let r = await Funcs.request('/api/storage', {type: "get_file", file: filename, username: localStorage.getItem("username")})
-            console.log(r)
             this.setState({filename: r.filename, content: r.content});
             (document.getElementById("filename") as HTMLInputElement).value = r.filename;
-            if(this.state.filename.split(".")[this.state.filename.split(".").length-1] !== "ls"){
-                (document.getElementById("content") as HTMLTextAreaElement).value = r.content;
-            }
+            (document.getElementById("content") as HTMLTextAreaElement).value = r.content;
         }
     }
 
     async handleClick(e: any){
         let filename = (document.getElementById("filename") as HTMLInputElement).value;
         let content = (document.getElementById("content") as HTMLTextAreaElement).value;
-        let payload = {type: "add_file", file: {filename: filename, content: content}, username: localStorage.getItem("username")}
+        
+        let payload = {type: "add_file", file: {filename: filename, content: content}, username: localStorage.getItem("username")}    
         let r = await Funcs.request('/api/storage', payload)
         if(r.type !== "OK"){
             this.setState({error: true})
