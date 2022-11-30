@@ -80,8 +80,9 @@ app.post('/api/user', async function(req, res){
     if(req.body.type == "get_user_info"){
         body = {
             type: "OK",
+            ip: await hdb.get_value(req.body.username, "ip"),
             username: req.body.username,
-            ip: await hdb.get_value(req.body.username, "ip")
+            creation_date: await hdb.get_value(req.body.username, "creation_date")
         }
         res.end(JSON.stringify(body))
     } else {
