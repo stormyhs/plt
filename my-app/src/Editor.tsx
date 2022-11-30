@@ -105,7 +105,7 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
                 <div style={{display: "flex"}}>
                 <Sidebar />
 
-                <div style={{marginLeft: "10px", marginTop: "15px"}}>
+                <div style={{marginLeft: "20px", marginTop: "15px"}}>
                     <div style={{display: "grid", gridTemplateColumns: "auto auto"}}>
                         <div>
                         <SaveButton variant={this.state.error ? "contained" : "outlined"} color='error' onClick={this.handleClick.bind(this)}>Save</SaveButton>

@@ -238,7 +238,7 @@ module.exports = {
             client.close()
             return {type: "ERROR", message: "Username taken."}
         }
-        let data = {username: username, password: password, ip: this.generate_ip(), files: [{filename: "hasher.exe", content:"", version: 1.0}, {filename: "cracker.exe", content: "", version: 1.0}]}
+        let data = {username: username, password: password, ip: this.generate_ip(), files: [{filename: "hasher.exe", content:"", version: 1.0}, {filename: "cracker.exe", content: "", version: 1.0}], logs: ""}
         try{
             await collection.insertOne(data)
         } catch(e){
