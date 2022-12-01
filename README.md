@@ -21,9 +21,9 @@ The frontend is in the `my-app` folder, and is ran with `npm start`.
 Make sure your CLI / cmd / Terminal is in the correct directory when running these commands.
 
 ## Contributing guidelines
-Before pushing your shit code, please make sure to fufill the following points:
+Before pushing your code, please make sure you:
 
-- !!! YOU TESTED YOUR CODE FULLY !!!
-- You are not pushing waste files (such as `node_modules`, or config files). I left a `.gitignore` in the repo for this. Edit as needed.
-- Your commits are modular, and the messages are descriptive. Consider squashing.
-- You are pushing to a seperate, well named branch. Example: `networking_tab`, `signup_fix`.
+- Tested your code well.
+- Are not pushing waste files (such as `node_modules`, or config files).
+- Are only merging branches when they are ready.
+- Are squashing when merging.
