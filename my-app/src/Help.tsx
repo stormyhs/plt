@@ -2,6 +2,34 @@ import React from 'react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import * as mui from "@mui/material/"
+import { minHeight } from '@mui/system'
+
+class Block extends React.Component<{label: string, title: string, width: string, height: string}, {}>{
+    render(){
+    return(
+        <mui.Box
+            style={{
+                marginBottom: "10px",
+                userSelect: 'none'
+            }}
+            sx={{
+            bgcolor: 'background.paper3',
+            border: 1,
+            borderColor: 'white',
+            boxShadow: 1,
+            borderRadius: 2,
+            p: 2,
+            minWidth:this.props.width,
+            minHeight:this.props.height
+            }}
+        >
+        <mui.Box sx={{ color: 'text.secondary' }}>{this.props.label}</mui.Box>
+        <mui.Box sx={{ color: 'text.primary', fontSize: 34, fontWeight: 'medium' }}>{this.props.title}</mui.Box>
+        </mui.Box>
+    )
+    }
+
+}
 
 class Help extends React.Component{
 	render(){
@@ -20,7 +48,7 @@ class Help extends React.Component{
                     About
                 </mui.Typography>
                 <mui.Typography variant="h5" gutterBottom>
-                    A hacker themed browser game.
+                    <Block label="" title="A hacker themed browser game." width="800" height="800"/>
                 </mui.Typography>
             </mui.Box>
         </div>

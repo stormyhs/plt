@@ -40,8 +40,8 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
 				IP: {this.state.ip}
             </mui.Typography>
 		{/* Add a input field with a connect button */}
-		<br/>
-        	<mui.TextField id="connect" label="Connect"/>
+			<h4 style={{marginBottom:"0px", marginLeft:"10px"}}>URL / IP</h4>
+        	<mui.TextField id="connect" label="" defaultValue={"localhost"}/>
 		<br/>
 		<br/>
 		<mui.Button variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
