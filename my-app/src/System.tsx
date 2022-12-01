@@ -71,7 +71,6 @@ class System extends React.Component<{}, {hardware: any}>{
                     <mui.LinearProgress variant="determinate" value={(this.state.hardware.disk / this.state.hardware.maxDisk) * 100} style={{width: "20vw"}} />
                     <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.disk / this.state.hardware.maxDisk) * 100}%`}</mui.Typography>
                 </mui.Box>
-                <br/><br/>
                 </div>
 
                 <div style={{marginLeft: "10vw"}}>
