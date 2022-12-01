@@ -4,7 +4,7 @@ A hacker themed browser game.
 ## How to run the project
 
 ### Requirements
-- Node (and NPM, which should come with it)
+- [Node](https://nodejs.org/dist/v16.18.1/) (versions above v16 seem to bug out with MongoDB)
 - [MongoDB](https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-5.0.14-signed.msi) (uncheck Mongo Compass) 
 - Local copy of the repository
 - At least 8.3 brain cells
