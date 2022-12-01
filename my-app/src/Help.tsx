@@ -20,7 +20,7 @@ class Help extends React.Component{
                     About
                 </mui.Typography>
                 <mui.Typography variant="h5" gutterBottom>
-                    A hacker themed browser game.
+                    A hacker themed browser game. Bla Bla.
                 </mui.Typography>
             </mui.Box>
         </div>
