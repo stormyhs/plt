@@ -1,8 +1,4 @@
-var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://localhost:27017/";
-var fs = require('fs');
-
-var hdb = require('./dbhandler');
+var database = require('./dbhandler');
 
 var cors = require('cors')
 var express = require('express');
@@ -24,29 +20,45 @@ app.use(cors({
     credentials: true
 }))
 
+function checkArgs(req, args){
+    let missing = []
+    for(let arg in args){
+        if(req[args[arg]] === undefined){
+            missing.push(args[arg])
+        }
+    }
+    
+    let argStatus = {}
+    if(missing.length > 0){
+        argStatus.type = "ERROR"
+        argStatus.message = "Missing data."
+        argStatus.missing = missing
+    } else{
+        argStatus.type = "OK"
+    }
+
+    return argStatus
+}
+
 app.post('/api/news', async (req, res) =>{
     console.log(`Request: ${JSON.stringify(req.body)}`)
-    res.end(JSON.stringify({"news": ["The rewrite has begun.", "Google's UI has been stolen."], "status": [{severity: "info", message: "Account merge is in progress."}]}))
-    // res.end(JSON.stringify({}))
-})
-
-app.post('/api/test', async (req, res) =>{
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    console.log(req.session)
-    if(req.session.test == null){
-        req.session.test = 1
-    } else{
-        req.session.test = req.session.test + 1
-    }
-    res.end(JSON.stringify({done: "done"}))
+    res.end(JSON.stringify(
+        {
+        "news": ["The rewrite has begun.", "Google's UI has been stolen."],
+        "status": [{severity: "info", message: "Account merge is in progress."}]
+        }))
 })
 
 app.post('/api/login', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
-    let body = await hdb.login(req.body.username, req.body.password)
-    console.log(body)
+    
+    let argStatus = checkArgs(req.body, ['username', 'password'])
+    if(argStatus.type != "OK"){
+        res.end(JSON.stringify(argStatus))
+    }
+
+    let body = await database.login(req.body.username, req.body.password)
     if(body.type == "OK"){
-        console.log("LOGIN OK")
         req.session.login = true
         req.session.username = req.body.username
     }
@@ -55,8 +67,13 @@ app.post('/api/login', async function(req, res){
 
 app.post('/api/register', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
-    console.log(req.session)
-    let body = await hdb.register(req.body.username, req.body.password)
+
+    let argStatus = checkArgs(req.body, ['username', 'password'])
+    if(argStatus.type != "OK"){
+        res.end(JSON.stringify(argStatus))
+    }
+
+    let body = await database.register(req.body.username, req.body.password)
     if(body.type == "OK"){
         req.session.login = true
         req.session.username = req.body.username
@@ -73,20 +90,20 @@ app.post('/api/logout', async function(req, res){
 app.post('/api/user', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
     if(req.session.login != true || req.session.username != req.body.username){
-        console.log(req.session)
         res.end(JSON.stringify({type: "relog"}))
         return
     }
+
     if(req.body.type == "get_user_info"){
         body = {
             type: "OK",
-            ip: await hdb.get_value(req.body.username, "ip"),
+            ip: await database.get_value(req.body.username, "ip"),
             username: req.body.username,
-            creation_date: await hdb.get_value(req.body.username, "creation_date")
+            creation_date: await database.get_value(req.body.username, "creation_date")
         }
         res.end(JSON.stringify(body))
     } else {
-        res.end(JSON.stringify({lol: "cum"}))
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
     }
 })
 
@@ -97,40 +114,60 @@ app.post('/api/storage', async function(req, res){
         res.end(JSON.stringify({error: "Invalid session ID."}))
         return
     }
+
     if(req.body.type == "get_files"){
-        res.end(JSON.stringify(await hdb.get_value(req.body.username, "files")))
+        res.end(JSON.stringify(await database.get_value(req.body.username, "files")))
     }
 
     else if(req.body.type == "remove_file"){
-        res.end(JSON.stringify(await hdb.remove_file(req.body.username, req.body.file)))
-        await hdb.add_log(req.body.username, `localhost removed file ${req.body.file}`)
+        let argStatus = checkArgs(req.body, ['file'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+
+        res.end(JSON.stringify(await database.remove_file(req.body.username, req.body.file)))
+        await database.add_log(req.body.username, `localhost removed file ${req.body.file}`)
     }
 
     else if(req.body.type == "rename_file"){
-        res.end(JSON.stringify(await hdb.rename_file(req.body.username, req.body.old, req.body.new)))
-        await hdb.add_log(req.body.username, `localhost renamed file ${req.body.old} to ${req.body.new}`)
+        let argStatus = checkArgs(req.body, ['old', 'new'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+
+        res.end(JSON.stringify(await database.rename_file(req.body.username, req.body.old, req.body.new)))
+        await database.add_log(req.body.username, `localhost renamed file ${req.body.old} to ${req.body.new}`)
     }
 
     else if(req.body.type == "add_file"){
-        if(req.body.file.filename.endsWith(".exe")){
-            res.end(JSON.stringify({type: "error", content: "Invalid file name."}))
+        let argStatus = checkArgs(req.body, ['file'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
             return
         }
-        let body = await hdb.get_file(req.body.username, req.body.file.filename)
-        if(body === null){
-            await hdb.add_log(req.body.username, `localhost created file ${req.body.file.filename}`)
-        } else{
-            await hdb.add_log(req.body.username, `localhost edited file ${req.body.file.filename}`)
+
+        if(req.body.file.filename.endsWith(".exe") || req.body.file.filename == ""){
+            res.end(JSON.stringify({type: "error", message: "Invalid file name."}))
+            return
         }
-        res.end(JSON.stringify(await hdb.add_file(req.body.username, req.body.file)))
+
+        let body = await database.get_file(req.body.username, req.body.file.filename)
+        if(body === null){
+            await database.add_log(req.body.username, `localhost created file ${req.body.file.filename}`)
+        } else{
+            await database.add_log(req.body.username, `localhost edited file ${req.body.file.filename}`)
+        }
+        res.end(JSON.stringify(await database.add_file(req.body.username, req.body.file)))
     }
 
     else if(req.body.type == "get_file"){
-        res.end(JSON.stringify(await hdb.get_file(req.body.username, req.body.file)))
+        res.end(JSON.stringify(await database.get_file(req.body.username, req.body.file)))
     }
 
     else{
-        res.end(JSON.stringify({lol: "cum"}))
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
     }
 })
 
@@ -140,62 +177,21 @@ app.post('/api/ip', async function(req, res){
         res.end(JSON.stringify({lol: "cum"}))
         return
     }
-    if(req.body.type == "get_ip_data"){
-        res.end(JSON.stringify(await hdb.get_ip_data(req.body.ip)))
-    }
-    else{
-        res.end(JSON.stringify({lol: "cum"}))
-    }
-})
 
-app.post('/api/terminal', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({lol: "cum"}))
-        return
-    }
-    if(req.body.type == "command"){
-        let cmd = req.body.command.split(" ")
-        let body = {}
-        if(cmd[0] == "help"){
-            body.content = "Help page\nhelp - Display help page\nls - List all files\nconnect <ip> - Connect to an IP\n"
-        } else
-        if(cmd[0] == "ls"){
-            let files = await hdb.get_value(req.body.currentip, "files")
-            console.log(files)
-            filenames = []
-            for(let f in files){
-                filenames.push(files[f].filename)
-            }
-            console.log(filenames)
-            body.content = filenames.join("\n")
-        } else
-        if(cmd[0] == "connect"){
-            body.content = `Establishing connection to ${cmd[1]}...\n`
-            if(await hdb.get_value(cmd[1], "ip") === cmd[1]){
-                let readme = await hdb.get_file(cmd[1], "README")
-                body.currentip = cmd[1]
-                body.content += "Connection established.\n"
-                if(readme != null){
-                    body.content += readme.content
-                }
-            }
-        } else
-        if(["disconnect", "exit"].indexOf(cmd[0]) != -1){
-            if(req.body.currentip == "localhost"){
-                body.content = "No operation.\n"
-            } else{
-                body.content = "Disconnecting...\n"
-                body.currentip = "localhost"
-            }
+    if(req.type == "connect_ip"){
+        let argStatus = checkArgs(req.body, ['ip'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
         }
-        else {
-            body.content = "Unknown command.\n"
+
+        if(req.body.type == "get_ip_data"){
+            res.end(JSON.stringify(await database.get_ip_data(req.body.ip)))
         }
-        res.end(JSON.stringify(body))
     }
+
     else{
-        res.end(JSON.stringify({lol: "cum"}))
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
     }
 })
 
@@ -205,14 +201,19 @@ app.post('/api/logs', async function(req, res){
         res.end(JSON.stringify({lol: "cum"}))
         return
     }
-    if(req.body.type == "getlogs"){
-        res.end(JSON.stringify(await hdb.get_value(req.body.username, "logs")))
+    if(req.body.type == "get_logs"){
+        res.end(JSON.stringify(await database.get_value(req.body.username, "logs")))
     }
-    if(req.body.type == "setlogs"){
-        res.end(JSON.stringify(await hdb.set_value(req.body.username, "logs", req.body.logs)))
+    if(req.body.type == "set_logs"){
+        let argStatus = checkArgs(req.body, ['logs'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+        res.end(JSON.stringify(await database.set_value(req.body.username, "logs", req.body.logs)))
     }
-    if(req.body.type == "clearlogs"){
-        res.end(JSON.stringify(await hdb.set_value(req.body.username, "logs", [])))
+    if(req.body.type == "clear_logs"){
+        res.end(JSON.stringify(await database.set_value(req.body.username, "logs", [])))
     }
 })
 

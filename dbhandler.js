@@ -220,7 +220,7 @@ module.exports = {
                 message: "Username or password is incorrect."
             }
             client.close()
-            return JSON.stringify(body)
+            return body
         }
         client.close()
         return {type: "OK", username: username}
@@ -255,6 +255,6 @@ module.exports = {
     },
 
     get_ip_data: async function(ip){
-        return {readme: await this.get_file(ip, "README")}
+        return {readme: await this.get_file(ip, "README.txt")}
     }
 }

@@ -19,20 +19,20 @@ let SaveButton = styled(mui.Button)({
 class Logs extends React.Component{
     async componentDidMount(){
         let logs = (document.getElementById("logs") as HTMLTextAreaElement);
-        let payload = {type: "getlogs", username: localStorage.getItem("username")}
+        let payload = {type: "get_logs", username: localStorage.getItem("username")}
         let r = await Funcs.request('/api/logs', payload)
         logs.value = r        
     }
 
     async saveLogs(){
         let logs = (document.getElementById("logs") as HTMLTextAreaElement).value;
-        let payload = {type: "setlogs", logs: logs, username: localStorage.getItem("username")}
+        let payload = {type: "set_logs", logs: logs, username: localStorage.getItem("username")}
         await Funcs.request('/api/logs', payload)
     }
 
     async clearLogs(){
         let logs = (document.getElementById("logs") as HTMLTextAreaElement);
-        let payload = {type: "clearlogs", username: localStorage.getItem("username")}
+        let payload = {type: "clear_logs", username: localStorage.getItem("username")}
         await Funcs.request('/api/logs', payload)
         logs.value = "*"
     }

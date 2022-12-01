@@ -30,7 +30,8 @@ export class Login extends React.Component<{}, FuckOff>{
             password: (document.getElementById(`password`) as HTMLInputElement).value
         }
         let r = await Funcs.request(`/api/${this.state.login ? "login" : "register"}`, payload)
-        if(r.type == "ERROR"){
+        console.log(r)
+        if(r.type === "ERROR"){
             this.setState({error: true})
         } else{
             localStorage.setItem("username", r.username)
