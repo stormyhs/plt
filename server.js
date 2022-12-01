@@ -171,6 +171,23 @@ app.post('/api/storage', async function(req, res){
     }
 })
 
+app.post('/api/hardware', async function(req, res){
+    console.log(`Request: ${JSON.stringify(req.body)}`)
+    if(req.session.login != true || req.session.username != req.body.username){
+        console.log(req.session)
+        res.end(JSON.stringify({error: "Invalid session ID."}))
+        return
+    }
+
+    if(req.body.type == "get_hardware"){
+        res.end(JSON.stringify(await database.get_hardware(req.body.user)))
+    }
+
+    else{
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
+    }
+})
+
 app.post('/api/ip', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
     if(req.session.login != true || req.session.username != req.body.username){
