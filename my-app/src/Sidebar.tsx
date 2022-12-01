@@ -19,7 +19,7 @@ class Sidebar extends React.Component{
 	return(
 		<div>
 		<mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
-		<mui.Paper elevation={0} style={{width: "125px", height: "100vh", borderRight: "white solid 1px"}}>
+		<mui.Paper elevation={0} style={{width: '100%', height: "100vh", borderRight: "white solid 1px"}}>
 		<mui.List style={{marginLeft: "0"}}>
     	
       <Link to='/system'>
