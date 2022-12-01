@@ -3,12 +3,17 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
 import * as mui from "@mui/material/"
+import { Link } from "react-router-dom";
 
-class Internet extends React.Component<{},{ip:string}>{
+import DesktopWindowsOutlinedIcon from '@mui/icons-material/DesktopWindowsOutlined';
+
+class Internet extends React.Component<{},{ip:string, connected:boolean, website:string,}>{
 	constructor(props: any){
 		super(props)
 		this.state = {
 			ip:"",
+			connected:false,
+			website:"",
 		}
 	}
 	async componentDidMount(){
@@ -16,6 +21,9 @@ class Internet extends React.Component<{},{ip:string}>{
 		console.log(r)
 		this.setState({ip:r.ip})
 	  }
+	async handleClick(e: any){
+		this.setState({connected: true})
+	}
 
 	render(){
 	return(
@@ -27,9 +35,51 @@ class Internet extends React.Component<{},{ip:string}>{
 		<div style={{display: "flex"}}>
 		<Sidebar />
 
-		<div style={{marginLeft:"20px"}}>
-			<h1>IP: {this.state.ip}</h1>
+		<div style={{marginLeft:"20px", marginTop:"20px"}}>
+			<mui.Typography variant="h3" gutterBottom>
+				IP: {this.state.ip}
+            </mui.Typography>
+		{/* Add a input field with a connect button */}
+		<br/>
+        	<mui.TextField id="connect" label="Connect"/>
+		<br/>
+		<br/>
+		<mui.Button variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
+  			Connect
+		</mui.Button>
+		<br/>
+		{this.state.connected?
+			<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px",}}>
+				<mui.Stack direction="column" spacing={2}>
+					<mui.Button variant="outlined" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
+  						Connect to machine
+					</mui.Button>
+					<mui.Button variant="outlined" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
+  						Crack password
+					</mui.Button>
+					<mui.Button variant="outlined" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
+  						Plant incriminating evidence
+					</mui.Button>
+				</mui.Stack>
+			</div>
+			:
+			""
+		}
 		</div>
+		{/* On the right add a list of popular websites (when clicked they get inputed into the search field)*/}
+		<div style={{display: 'inlineFlex', marginLeft: 'auto', marginRight: "15vw", userSelect: 'none'}}>
+			<h1>Common adresses</h1>
+			<h2>127.0.0.1</h2>
+			<h2>192.168.0.1</h2>
+			<h2>localhost</h2>
+			<h2>some npc shit</h2>
+			<h2>thughunter.com</h2>
+	  	</div>
+		
+
+		{/* If you put in a URL of a website it will open that site in a new tab */}
+
+
 
 		</div>
 		</mui.Paper>

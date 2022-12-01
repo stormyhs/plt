@@ -238,9 +238,11 @@ module.exports = {
             client.close()
             return {type: "ERROR", message: "Username taken."}
         }
+
         const date = new Date();
         creation_date = `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`
-        let data = {username: username, password: password, ip: this.generate_ip(), files: [{filename: "hasher.exe", content:"", version: 1.0}, {filename: "cracker.exe", content: "", version: 1.0}], creation_date: creation_date}
+        let data = {username: username, password: password, ip: this.generate_ip(), files: [{filename: "hasher.exe", content:"", version: 1.0}, {filename: "cracker.exe", content: "", version: 1.0}], logs: "", creation_date: creation_date}
+
         try{
             await collection.insertOne(data)
         } catch(e){
