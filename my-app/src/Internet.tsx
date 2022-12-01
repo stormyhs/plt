@@ -3,17 +3,16 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
 import * as mui from "@mui/material/"
-import { Link } from "react-router-dom";
 
-import DesktopWindowsOutlinedIcon from '@mui/icons-material/DesktopWindowsOutlined';
-
-class Internet extends React.Component<{},{ip:string, connected:boolean, website:string,}>{
+class Internet extends React.Component<{},{ip:string, connected:boolean, website:string,userInput:string,invalidInput:boolean,}>{
 	constructor(props: any){
 		super(props)
 		this.state = {
 			ip:"",
-			connected:false,
+			userInput:"",
 			website:"",
+			connected:false,
+			invalidInput:false,
 		}
 	}
 	async componentDidMount(){
@@ -22,7 +21,16 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
 		this.setState({ip:r.ip})
 	  }
 	async handleClick(e: any){
-		this.setState({connected: true})
+		let userInput = (document.getElementById("connect") as HTMLInputElement).value
+		console.log(userInput)
+
+		if (this.state.ip == userInput){
+			this.setState({connected: true})
+			this.setState({invalidInput: false})
+		} else {
+			this.setState({invalidInput: true})
+			this.setState({connected: false})
+		}
 	}
 
 	render(){
@@ -41,26 +49,57 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
             </mui.Typography>
 		{/* Add a input field with a connect button */}
 			<h4 style={{marginBottom:"0px", marginLeft:"10px"}}>URL / IP</h4>
-        	<mui.TextField id="connect" label="" defaultValue={"localhost"}/>
+        	<mui.TextField id="connect" label="" defaultValue=""/>
 		<br/>
 		<br/>
 		<mui.Button variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
   			Connect
 		</mui.Button>
 		<br/>
+		<br/>
+		{this.state.invalidInput?
+			<div>
+				<mui.Typography variant="h5" gutterBottom>
+					Invalid URL / IP address
+            	</mui.Typography>				
+			</div>
+			:
+			""
+		}
 		{this.state.connected?
-			<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px",}}>
-				<mui.Stack direction="column" spacing={2}>
-					<mui.Button variant="outlined" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
-  						Connect to machine
-					</mui.Button>
-					<mui.Button variant="outlined" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
-  						Crack password
-					</mui.Button>
-					<mui.Button variant="outlined" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
-  						Plant incriminating evidence
-					</mui.Button>
-				</mui.Stack>
+			<div>
+				<mui.Typography variant="h4" gutterBottom>
+					IP: {this.state.ip}
+            	</mui.Typography>
+				<mui.Typography variant="h6" gutterBottom>
+					IPv6: fe80::5dcd::fb22::d9888%12
+					<br/>
+					DMZ: 10.112.42.15
+					<br/>
+					DNS: 8.8.8.8
+					<br/>
+					ALT DNS: 1.1.1.8.1
+					<br/>
+					WAN: 100.23.10.15
+					<br/>
+					Social Security No.: 6979191519182016
+					<br/>
+					Location: N:43.7462 W:12.4893
+            	</mui.Typography>
+				<br/>
+				<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px",}}>
+					<mui.Stack direction="column" spacing={2}>
+						<mui.Button variant="outlined" size="small" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
+  							Connect to machine
+						</mui.Button>
+						<mui.Button variant="outlined" size="small" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
+  							Crack password
+						</mui.Button>
+						<mui.Button variant="outlined" size="small" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
+  							Plant incriminating evidence
+						</mui.Button>
+					</mui.Stack>
+				</div>
 			</div>
 			:
 			""
@@ -75,11 +114,6 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
 			<h2>some npc shit</h2>
 			<h2>thughunter.com</h2>
 	  	</div>
-		
-
-		{/* If you put in a URL of a website it will open that site in a new tab */}
-
-
 
 		</div>
 		</mui.Paper>
@@ -90,3 +124,8 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
 }
 
 export default Internet;
+
+// TO DO:
+
+// the user will be able to give an ip of himself or an user, any ip will be albe to respond ,either the ip does not exist
+// or it will open up a view with those red buttons or the contents of a readme.txt file if it exists
