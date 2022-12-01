@@ -23,7 +23,7 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
 	  }
 	async handleClick(e: any){
 		this.setState({connected: true})
-	  }
+	}
 
 	render(){
 	return(
@@ -41,7 +41,7 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
             </mui.Typography>
 		{/* Add a input field with a connect button */}
 		<br/>
-        	<mui.TextField id="outlined-search" label="Search field" type="search" />
+        	<mui.TextField id="connect" label="Connect"/>
 		<br/>
 		<br/>
 		<mui.Button variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
@@ -67,14 +67,14 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
 		}
 		</div>
 		{/* On the right add a list of popular websites (when clicked they get inputed into the search field)*/}
-		<mui.List style={{marginLeft: "0"}}>
-    			<mui.MenuItem>
-         			<mui.ListItemIcon>
-          			<DesktopWindowsOutlinedIcon/>
-          			</mui.ListItemIcon>
-          		<mui.ListItemText></mui.ListItemText>
-      		</mui.MenuItem>
-	  	</mui.List>
+		<div style={{display: 'inlineFlex', marginLeft: 'auto', marginRight: "15vw", userSelect: 'none'}}>
+			<h1>Common adresses</h1>
+			<h2>127.0.0.1</h2>
+			<h2>192.168.0.1</h2>
+			<h2>localhost</h2>
+			<h2>some npc shit</h2>
+			<h2>thughunter.com</h2>
+	  	</div>
 		
 
 		{/* If you put in a URL of a website it will open that site in a new tab */}
