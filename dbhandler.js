@@ -256,7 +256,20 @@ module.exports = {
     },
 
     get_ip_data: async function(ip){
-        return {readme: await this.get_file(ip, "README.txt")}
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {ip: ip}
+        r = await collection.findOne(q)
+        
+        if(r == null){
+            return {type: "ERROR", message: "Could not connect to IP"}
+        }
+    
+        return {
+            type: "OK",
+            readme: await this.get_file(ip, "README.txt")
+        }
     },
 
     get_hardware: async function(user){
