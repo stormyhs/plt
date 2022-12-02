@@ -195,16 +195,14 @@ app.post('/api/ip', async function(req, res){
         return
     }
 
-    if(req.type == "connect_ip"){
+    if(req.body.type == "get_ip_data"){
         let argStatus = checkArgs(req.body, ['ip'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
-        if(req.body.type == "get_ip_data"){
-            res.end(JSON.stringify(await database.get_ip_data(req.body.ip)))
-        }
+        res.end(JSON.stringify(await database.get_ip_data(req.body.ip)))
     }
 
     else{
