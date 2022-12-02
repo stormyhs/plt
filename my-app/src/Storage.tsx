@@ -6,6 +6,9 @@ import {styled} from "@mui/material/styles"
 import Funcs from './Funcs'
 import { Link } from "react-router-dom";
 
+import TextSnippetOutlinedIcon from '@mui/icons-material/TextSnippetOutlined';
+import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 
 const CssTextField = styled(mui.TextField)({
 textAlign: "center",
@@ -55,7 +58,7 @@ function RenameDialog(props: any) {
   );
 }
 
-class File extends React.Component<{filename: string, content: string}, {open: boolean, name: string}>{
+class File extends React.Component<{filename: string, content: string, size: any}, {open: boolean, name: string}>{
   constructor(props: any){
     super(props)
     this.state = {name: props.filename, open: false}
@@ -91,12 +94,29 @@ class File extends React.Component<{filename: string, content: string}, {open: b
           <Link id={"link-" + this.props.filename} to={"/editor?filename=" + this.state.name}>
           <mui.CardActionArea>
             <mui.CardContent>
-              <mui.Typography id={"title-" + this.state.name} gutterBottom variant="h5" component="div">
+              <div style={{display: "flex", alignItems: "center"}}>
+              
+              {this.props.filename.split(".")[this.props.filename.split(".").length-1] == "txt"?
+              <TextSnippetOutlinedIcon/>
+              :""
+              }
+              
+              {this.props.filename.split(".")[this.props.filename.split(".").length-1] == "ls"?
+              <CodeOutlinedIcon/>
+              :""
+              }
+              
+              {this.props.filename.split(".")[this.props.filename.split(".").length-1] == "exe"?
+              <SettingsOutlinedIcon/>
+              :""
+              }
+
+              <mui.Typography gutterBottom variant="h5" component="div">
                 {this.state.name}
               </mui.Typography>
+              </div>
               <mui.Typography variant="body2" color="text.secondary">
-                {/*{this.props.content}*/}
-                {"2 MB - RUNNING"}
+                {`${this.props.size} MB - ${this.props.content.slice(0, 12) + "..."}`}
               </mui.Typography>
             </mui.CardContent>
           </mui.CardActionArea>
@@ -166,7 +186,7 @@ class Storage extends React.Component<{}, {files: any}>{
 	        ?
 	        (<>
 	            {this.state.files.map((file: any) =>{
-	                return  <><File filename={file.filename} content={file.content}/></>
+	                return  <><File filename={file.filename} content={file.content} size={file.size}/></>
 	            })}
 	        </>)
 	        :

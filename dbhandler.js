@@ -297,9 +297,18 @@ module.exports = {
             console.log(hardware)
         }
 
+        let files = await this.get_value(user, "files")
+        let usedSpace = 0
+        console.log(files)
+        for(let file in files){
+            if(files[file].size != undefined){
+                usedSpace = usedSpace + files[file].size
+            }
+        }
+
         body = {
             type: "OK",
-            disk: hardware.disk,
+            disk: usedSpace,
             maxDisk: hardware.maxDisk,
             cpu: hardware.cpu,
             maxCpu: hardware.maxCpu
