@@ -2,6 +2,7 @@ import React from 'react'
 import Topbar from './Topbar'
 import Sidebar from './Sidebar'
 import * as mui from "@mui/material/"
+import Funcs from './Funcs'
 
 class Block extends React.Component<{label: string, title: string}, {}>{
     render(){
@@ -26,10 +27,24 @@ class Block extends React.Component<{label: string, title: string}, {}>{
         </mui.Box>
     )
     }
-
 }
 
-class System extends React.Component<{}, {files: []}>{
+class System extends React.Component<{}, {hardware: any}>{
+    constructor(props: any){
+        super(props)
+        this.state = {hardware: {}}
+    }
+
+    async componentDidMount(){
+        let payload = {
+            username: localStorage.getItem("username"),
+            type: "get_hardware"
+        }
+        let r = await Funcs.request('/api/hardware', payload)
+        console.log(r)
+        this.setState({hardware: {cpu: r.cpu, maxCpu: r.maxCpu, disk: r.disk, maxDisk: r.maxDisk}})
+    }
+
     render(){
         return(
             <div>
@@ -44,18 +59,18 @@ class System extends React.Component<{}, {files: []}>{
                 <div>
                 <h1> System </h1>
                 <h2> Hardware Usage</h2>
+
                 <mui.Box style={{display: "flex", "alignItems": "center"}}>
                     <mui.Typography variant="h5" color="text.primary" style={{marginRight: "10px"}}>{'CPU'}</mui.Typography>
-                    <mui.LinearProgress variant="determinate" value={30} style={{width: "20vw"}} />
-                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`30%`}</mui.Typography>
+                    <mui.LinearProgress variant="determinate" value={(this.state.hardware.cpu / this.state.hardware.maxCpu) * 100} style={{width: "20vw"}} />
+                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.cpu / this.state.hardware.maxCpu) * 100}%`}</mui.Typography>
                 </mui.Box>
                 <br/>
                 <mui.Box style={{display: "flex", "alignItems": "center"}}>
                     <mui.Typography variant="h5" color="text.primary" style={{marginRight: "10px"}}>{'HDD'}</mui.Typography>
-                    <mui.LinearProgress variant="determinate" value={75} style={{width: "20vw"}} />
-                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`75%`}</mui.Typography>
+                    <mui.LinearProgress variant="determinate" value={(this.state.hardware.disk / this.state.hardware.maxDisk) * 100} style={{width: "20vw"}} />
+                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.disk / this.state.hardware.maxDisk) * 100}%`}</mui.Typography>
                 </mui.Box>
-                <br/><br/>
                 </div>
 
                 <div style={{marginLeft: "10vw"}}>

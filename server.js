@@ -111,7 +111,7 @@ app.post('/api/storage', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
     if(req.session.login != true || req.session.username != req.body.username){
         console.log(req.session)
-        res.end(JSON.stringify({error: "Invalid session ID."}))
+        res.end(JSON.stringify({type: "relog"}))
         return
     }
 
@@ -171,23 +171,38 @@ app.post('/api/storage', async function(req, res){
     }
 })
 
-app.post('/api/ip', async function(req, res){
+app.post('/api/hardware', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
     if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({lol: "cum"}))
+        console.log(req.session)
+        res.end(JSON.stringify({type: "relog"}))
         return
     }
 
-    if(req.type == "connect_ip"){
+    if(req.body.type == "get_hardware"){
+        res.end(JSON.stringify(await database.get_hardware(req.body.user)))
+    }
+
+    else{
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
+    }
+})
+
+app.post('/api/ip', async function(req, res){
+    console.log(`Request: ${JSON.stringify(req.body)}`)
+    if(req.session.login != true || req.session.username != req.body.username){
+        res.end(JSON.stringify({type: "relog"}))
+        return
+    }
+
+    if(req.body.type == "get_ip_data"){
         let argStatus = checkArgs(req.body, ['ip'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
-        if(req.body.type == "get_ip_data"){
-            res.end(JSON.stringify(await database.get_ip_data(req.body.ip)))
-        }
+        res.end(JSON.stringify(await database.get_ip_data(req.body.ip)))
     }
 
     else{
@@ -198,7 +213,7 @@ app.post('/api/ip', async function(req, res){
 app.post('/api/logs', async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
     if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({lol: "cum"}))
+        res.end(JSON.stringify({type: "relog"}))
         return
     }
     if(req.body.type == "get_logs"){
