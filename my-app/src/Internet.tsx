@@ -4,27 +4,54 @@ import Topbar from './Topbar'
 import Funcs from './Funcs'
 import * as mui from "@mui/material/"
 
-class Internet extends React.Component<{},{ip:string, connected:boolean, website:string,userInput:string,invalidInput:boolean,}>{
+class Block extends React.Component<{label: string, title: string,}, {}>{
+    render(){
+    return(
+        <mui.Box
+            style={{
+                marginBottom: "10px",
+                userSelect: 'none'
+            }}
+            sx={{
+            bgcolor: 'background.paper3',
+            border: 1,
+            borderColor: 'white',
+            boxShadow: 1,
+            borderRadius: 2,
+            p: 2,
+            }}
+        >
+        <mui.Box sx={{ color: 'text.secondary' }}><mui.Typography>{this.props.label}</mui.Typography></mui.Box>
+        <mui.Box sx={{ color: 'text.primary', fontSize: 34, fontWeight: 'medium' }}><mui.Typography>{this.props.title}</mui.Typography></mui.Box>
+        </mui.Box>
+    )
+    }
+
+}
+
+class Internet extends React.Component<{},{ip:string, connected:boolean, website:string,userInput:string,invalidInput:boolean,readme:string}>{
 	constructor(props: any){
 		super(props)
 		this.state = {
 			ip:"",
 			userInput:"",
 			website:"",
+			readme:"",
 			connected:false,
 			invalidInput:false,
 		}
 	}
 	async componentDidMount(){
 		let r = await Funcs.request('/api/user', {type: "get_user_info", username: localStorage.getItem("username")})
-		console.log(r)
 		this.setState({ip:r.ip})
 	  }
+	
 	async handleClick(e: any){
 		let userInput = (document.getElementById("connect") as HTMLInputElement).value
-		console.log(userInput)
+		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
+		this.setState({readme:r.readme.content})
 
-		if (this.state.ip == userInput){
+		if (r.type == "OK"){
 			this.setState({connected: true})
 			this.setState({invalidInput: false})
 		} else {
@@ -71,22 +98,8 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
 				<mui.Typography variant="h4" gutterBottom>
 					IP: {this.state.ip}
             	</mui.Typography>
-				<mui.Typography variant="h6" gutterBottom>
-					IPv6: fe80::5dcd::fb22::d9888%12
-					<br/>
-					DMZ: 10.112.42.15
-					<br/>
-					DNS: 8.8.8.8
-					<br/>
-					ALT DNS: 1.1.1.8.1
-					<br/>
-					WAN: 100.23.10.15
-					<br/>
-					Social Security No.: 6979191519182016
-					<br/>
-					Location: N:43.7462 W:12.4893
-            	</mui.Typography>
 				<br/>
+				<Block label="IP's readme file" title={this.state.readme}/>
 				<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px",}}>
 					<mui.Stack direction="column" spacing={2}>
 						<mui.Button variant="outlined" size="small" color="error" style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
@@ -124,8 +137,3 @@ class Internet extends React.Component<{},{ip:string, connected:boolean, website
 }
 
 export default Internet;
-
-// TO DO:
-
-// the user will be able to give an ip of himself or an user, any ip will be albe to respond ,either the ip does not exist
-// or it will open up a view with those red buttons or the contents of a readme.txt file if it exists
