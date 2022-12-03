@@ -321,9 +321,9 @@ module.exports = {
     },
 
     set_default_files: async function(user, file){
-        let file = await this.get_file(user, file)
+        let hasFile = await this.get_file(user, file)
         
-        if(file == null){
+        if(hasFile == null){
             await this.add_file(user, {filename: file, content: "[EXECUTABLE FILE]"})
         }
 
