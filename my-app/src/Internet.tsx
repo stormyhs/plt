@@ -55,7 +55,7 @@ readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESC
 		this.setState({ip:r.ip})
 	}
 	
-	async handleClick(e: any){
+	async handleClick(){
 		let userInput = (document.getElementById("connect") as HTMLInputElement).value
 		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
 
@@ -109,19 +109,17 @@ readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESC
 			</mui.Typography>
 			<h4 style={{marginBottom:"0px", marginLeft:"10px"}}>URL / IP</h4>
 			<mui.Stack direction="row" spacing={1}>
-				<mui.TextField id="connect" label="" defaultValue=""/>
-				<mui.Button variant="outlined" color="primary" onClick={this.handleClear.bind(this)}>
+				<mui.TextField className='connectField' id="connect" label="" defaultValue=""/>
+				<mui.Button className='clear' variant="outlined" color="primary" onClick={this.handleClear.bind(this)}>
 					Clear
 				</mui.Button>
-			</mui.Stack>
-			<br/>
-			<br/>
-			<mui.Stack direction="row" spacing={2}>
-				<mui.Button variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
+				<mui.Button className='clear' id="connect" variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
 					Connect
 				</mui.Button>
 			</mui.Stack>
+
 			<br/>
+
 			{this.state.connected?
 			<div>
 				<mui.Typography variant="h4" gutterBottom>
@@ -144,6 +142,8 @@ readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESC
 					</mui.Stack>
 				</div>
 				<br/>
+				<br/>
+				<br/>
 				<div>
 					<mui.Box>
 						<Block label="IP's readme file" title={this.state.readme}/>
@@ -154,7 +154,6 @@ readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESC
 			""
 			}
 			<br/>
-
 			{this.state.invalidInput?
 			<div>
 				<mui.Typography variant="h5" gutterBottom>
@@ -194,7 +193,7 @@ readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESC
 			""
 			}
 		</div>
-		<div style={{display: 'inlineFlex', marginLeft: 'auto', marginRight: "15vw"}}>
+		<div style={{display: 'inlineFlex', marginLeft: 'auto', marginRight: "2vw"}}>
 			<h1>Common adresses</h1>
 			<h2>127.0.0.1</h2>
 			<h2>192.168.0.1</h2>

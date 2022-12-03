@@ -9,6 +9,15 @@ a{
   text-decoration: none;
 }
 
+#connect {
+  padding-bottom: 9px;
+  padding-top: 9px;
+}
+
+.clear {
+  height: 40px;
+}
+
 .topbar{
   user-select: none;
   display: grid;
