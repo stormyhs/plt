@@ -93,6 +93,11 @@ module.exports = {
             }
         }
 
+        if(["cracker.exe", "hasher.exe"].indexOf(file) != -1){
+            client.close()
+            return {filename: file, content: "This file cannot be modified."}
+        }
+
         var toPush = true
         var files = r.files
         files.forEach(element => {
@@ -126,10 +131,6 @@ module.exports = {
             if(r == null){
                 return null
             }
-        }
-        if(["cracker.exe", "hasher.exe"].indexOf(file) != -1){
-            client.close()
-            return {filename: file, content: "This file cannot be modified."}
         }
         if(r.files == undefined){
             client.close()
@@ -322,12 +323,12 @@ module.exports = {
 
     set_default_files: async function(user, file){
         let hasFile = await this.get_file(user, file)
-        
         if(hasFile == null){
-            await this.add_file(user, {filename: file, content: "[EXECUTABLE FILE]"})
+            await this.add_file(user, {filename: file, content: "[EXECUTABLE FILE]", size: 2, version: 1})
+            return {type: "OK"}
+        } else{
+            return {type: "ERROR", message: "File already exists.", debug: hasFile}
         }
 
-        body.type = {type: "OK"}
-        return body
     }
 }
