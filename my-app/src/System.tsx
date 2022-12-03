@@ -4,6 +4,9 @@ import Sidebar from './Sidebar'
 import * as mui from "@mui/material/"
 import Funcs from './Funcs'
 
+import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
+import MemoryOutlinedIcon from '@mui/icons-material/MemoryOutlined';
+
 class Block extends React.Component<{label: string, title: string}, {}>{
     render(){
     return(
@@ -61,15 +64,17 @@ class System extends React.Component<{}, {hardware: any}>{
                 <h2> Hardware Usage</h2>
 
                 <mui.Box style={{display: "flex", "alignItems": "center"}}>
+                    <MemoryOutlinedIcon/>
                     <mui.Typography variant="h5" color="text.primary" style={{marginRight: "10px"}}>{'CPU'}</mui.Typography>
                     <mui.LinearProgress variant="determinate" value={(this.state.hardware.cpu / this.state.hardware.maxCpu) * 100} style={{width: "20vw"}} />
-                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.cpu / this.state.hardware.maxCpu) * 100}%`}</mui.Typography>
+                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.cpu / this.state.hardware.maxCpu) * 100}% (${this.state.hardware.cpu} / ${this.state.hardware.maxCpu})`}</mui.Typography>
                 </mui.Box>
                 <br/>
                 <mui.Box style={{display: "flex", "alignItems": "center"}}>
+                    <StorageOutlinedIcon/>
                     <mui.Typography variant="h5" color="text.primary" style={{marginRight: "10px"}}>{'HDD'}</mui.Typography>
                     <mui.LinearProgress variant="determinate" value={(this.state.hardware.disk / this.state.hardware.maxDisk) * 100} style={{width: "20vw"}} />
-                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.disk / this.state.hardware.maxDisk) * 100}%`}</mui.Typography>
+                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.disk / this.state.hardware.maxDisk) * 100}% (${this.state.hardware.disk} / ${this.state.hardware.maxDisk})`}</mui.Typography>
                 </mui.Box>
                 </div>
 

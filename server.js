@@ -148,18 +148,35 @@ app.post('/api/storage', async function(req, res){
             return
         }
 
-        if(req.body.file.filename.endsWith(".exe") || req.body.file.filename == ""){
-            res.end(JSON.stringify({type: "error", message: "Invalid file name."}))
+        let file = {
+            filename: req.body.file.filename,
+            content: req.body.file.content,
+            size: 2
+        }
+        let extention = req.body.file.filename.split(".")[req.body.file.filename.split(".").length - 1]
+
+        if(extention == ""){
+            res.end(JSON.stringify({type: "error", message: "Filename has no extention."}))
             return
         }
 
+        if(extention == "exe" || req.body.file.filename == ""){
+            res.end(JSON.stringify({type: "error", message: "Invalid file name."}))
+            return
+        }
+        
         let body = await database.get_file(req.body.username, req.body.file.filename)
         if(body === null){
             await database.add_log(req.body.username, `localhost created file ${req.body.file.filename}`)
+            let hardware = await database.get_hardware(req.body.username)
+            if(hardware.disk + file.size > hardware.maxDisk){
+                res.end(JSON.stringify({type: "error", message: "Not enough disk space."}))
+                return
+            }
         } else{
             await database.add_log(req.body.username, `localhost edited file ${req.body.file.filename}`)
         }
-        res.end(JSON.stringify(await database.add_file(req.body.username, req.body.file)))
+        res.end(JSON.stringify(await database.add_file(req.body.username, file)))
     }
 
     else if(req.body.type == "get_file"){
@@ -180,7 +197,7 @@ app.post('/api/hardware', async function(req, res){
     }
 
     if(req.body.type == "get_hardware"){
-        res.end(JSON.stringify(await database.get_hardware(req.body.user)))
+        res.end(JSON.stringify(await database.get_hardware(req.body.username)))
     }
 
     else{
@@ -230,6 +247,29 @@ app.post('/api/logs', async function(req, res){
     if(req.body.type == "clear_logs"){
         res.end(JSON.stringify(await database.set_value(req.body.username, "logs", [])))
     }
+})
+
+app.post('/api/defaults', async function(req, res){
+    console.log(`Request: ${JSON.stringify(req.body)}`)
+    if(req.session.login != true || req.session.username != req.body.username){
+        res.end(JSON.stringify({type: "relog"}))
+        return
+    }
+
+    if(req.body.type == "get_cracker"){
+        res.end(JSON.stringify(await database.set_default_files(req.body.username, "cracker.exe")))
+        return
+    }
+
+    if(req.body.type == "get_hasher"){
+        res.end(JSON.stringify(await database.set_default_files(req.body.username, "hasher.exe")))
+        return
+    }
+
+    else{
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
+    }
+
 })
 
 var server = app.listen(4444, function () {
