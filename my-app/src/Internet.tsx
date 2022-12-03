@@ -34,25 +34,35 @@ class Block extends React.Component<{label: string, title: string,}, {}>{
 }
 
 class Internet extends React.Component<{},
-{ip:string, connected:boolean, website:string,userInput:string,invalidInput:boolean,
-readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESCRIPT!!!
+{ip:string, connected:boolean,userInput:string,invalidInput:boolean,
+readme:string,downloader:boolean,}>{
 	constructor(props: any){
 		super(props)
 		this.state = {
 			ip:"",
 			userInput:"",
-			website:"",
 			readme:"",
 			downloader:false,
 			connected:false,
 			invalidInput:false,
-			clearButton:false
 		}
 	}
 
 	async componentDidMount(){
 		let r = await Funcs.request('/api/user', {type: "get_user_info", username: localStorage.getItem("username")})
 		this.setState({ip:r.ip})
+	}
+
+	async download(e: any){
+		if(e.target.id == "cracker"){
+			let r1 = await Funcs.request('/api/defaults', {type: "get_cracker", username: localStorage.getItem("username")})
+			console.log(r1)
+		}
+		if(e.target.id == "hasher"){
+			let r2 = await Funcs.request('/api/defaults', {type: "get_hasher", username: localStorage.getItem("username")})
+			console.log(r2)
+		}
+		console.log(e.target.id)
 	}
 	
 	async handleClick(){
@@ -61,7 +71,6 @@ readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESC
 
 		if(r.readme != null){
 			this.setState({readme:r.readme.content})
-			// console.log(r.readme.content)
 		}
 
 		if (r.type == "OK"){
@@ -109,11 +118,11 @@ readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESC
 			</mui.Typography>
 			<h4 style={{marginBottom:"0px", marginLeft:"10px"}}>URL / IP</h4>
 			<mui.Stack direction="row" spacing={1}>
-				<mui.TextField className='connectField' id="connect" label="" defaultValue=""/>
-				<mui.Button className='clear' variant="outlined" color="primary" onClick={this.handleClear.bind(this)}>
+				<mui.TextField id="connect" label="" defaultValue=""/>
+				<mui.Button style={{height: "40px"}} variant="outlined" color="primary" onClick={this.handleClear.bind(this)}>
 					Clear
 				</mui.Button>
-				<mui.Button className='clear' id="connect" variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
+				<mui.Button style={{height: "40px"}} id="connect" variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
 					Connect
 				</mui.Button>
 			</mui.Stack>
@@ -174,17 +183,15 @@ readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESC
 					Here are some tools for new hackers:
 				</mui.Typography>
 				<mui.Stack direction="row" spacing={1}>
-					<mui.Button variant="outlined" size="large" color="error" 
-					style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
+					<mui.Button id='hasher' variant="outlined" size="large" color="error" 
+					style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}
+					onClick={this.download.bind(this)}>
 						Hasher.exe
 					</mui.Button>
-					<mui.Button variant="outlined" size="large" color="error" 
-					style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
+					<mui.Button id='cracker' variant="outlined" size="large" color="error" 
+					style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}
+					onClick={this.download.bind(this)}>
 						Cracker.exe
-					</mui.Button>
-					<mui.Button variant="outlined" size="large" color="error" 
-					style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}>
-						(Example Button)
 					</mui.Button>
 				</mui.Stack>
 				</mui.Box>
