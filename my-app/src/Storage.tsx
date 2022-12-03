@@ -58,7 +58,7 @@ function RenameDialog(props: any) {
   );
 }
 
-class File extends React.Component<{filename: string, content: string, size: any}, {open: boolean, name: string}>{
+class File extends React.Component<{filename: string, content: string, size: any, version?: any, buttons?: any}, {open: boolean, name: string}>{
   constructor(props: any){
     super(props)
     this.state = {name: props.filename, open: false}
@@ -85,6 +85,27 @@ class File extends React.Component<{filename: string, content: string, size: any
   rename(newName: string){
     this.setState({name: newName})
     console.log(`set name to ${newName}`)
+  }
+
+  getButtons(){
+    let buttons = []
+    let extention = this.state.name.split(".")[this.state.name.split(".").length - 1]
+
+    if(extention === "ls"){
+      buttons.push(<mui.Button size="small" color="primary">Compile</mui.Button>)
+    }
+    if(extention === "exe"){
+      if(this.state.name !== "cracker.exe" && this.state.name !== "hasher.exe"){
+        buttons.push(<mui.Button size="small" color="primary">Run</mui.Button>)
+      }
+    }
+
+    if(this.state.name === "cracker.exe" || this.state.name === "hasher.exe"){
+      buttons.push(<mui.Button size="small" color="primary">Upgrade</mui.Button>)
+    }
+
+    buttons.push(<mui.Button size="small" color="primary"onClick={this.delete.bind(this)}>Delete</mui.Button>)
+    return buttons
   }
 
   render(){
@@ -116,27 +137,23 @@ class File extends React.Component<{filename: string, content: string, size: any
               </mui.Typography>
               </div>
               <mui.Typography variant="body2" color="text.secondary">
-                {`${this.props.size} MB - ${this.props.content.slice(0, 12) + "..."}`}
+                {this.props.version?
+                `${this.props.size} MB - V${this.props.version}`
+                :
+                `${this.props.size} MB - ${this.props.content.slice(0, 12) + "..."}`
+                }
+                
               </mui.Typography>
             </mui.CardContent>
           </mui.CardActionArea>
           </Link>
           <mui.CardActions>
-          {this.state.name.split(".")[this.state.name.split(".").length - 1] === "ls"
-          ?
-            <mui.Button size="small" color="primary">
-              Compile
-            </mui.Button>
-          :
-          ""}
-          {this.state.name.split(".")[this.state.name.split(".").length - 1] === "exe"
-          ?
-            <mui.Button size="small" color="primary">
-              Run
-            </mui.Button>
-          :
-          ""}
-            <mui.Button size="small" color="primary"
+
+          {this.getButtons().map((button: any) =>{
+            return button
+          })}
+
+          <mui.Button size="small" color="primary"
             onClick={this.handleClickOpen.bind(this)}
             >
               Rename
@@ -146,12 +163,8 @@ class File extends React.Component<{filename: string, content: string, size: any
             onClose={this.handleClose.bind(this)}
             old={this.state.name}
             rename={this.rename}
-            />
+          />
 
-            <mui.Button size="small" color="primary"
-            onClick={this.delete.bind(this)}>
-              Delete
-            </mui.Button>
           </mui.CardActions>
         </mui.Card>
         </>
@@ -179,14 +192,14 @@ class Storage extends React.Component<{}, {files: any}>{
         <Topbar />
         <div style={{display: "flex"}}>
         <Sidebar />
-        
+
         <div style={{display: "grid", alignContent: "flex-start", gridTemplateColumns: "auto auto auto auto auto"}}>
 	        {
 	        this.state.files != null && this.state.files.length !== 0
 	        ?
 	        (<>
 	            {this.state.files.map((file: any) =>{
-	                return  <><File filename={file.filename} content={file.content} size={file.size}/></>
+	                return  <><File filename={file.filename} content={file.content} size={file.size} version={file.version}/></>
 	            })}
 	        </>)
 	        :
