@@ -318,6 +318,16 @@ module.exports = {
 
         client.close()
         return body
-    }
+    },
 
+    set_default_files: async function(user, file){
+        let file = await this.get_file(user, file)
+        
+        if(file == null){
+            await this.add_file(user, {filename: file, content: "[EXECUTABLE FILE]"})
+        }
+
+        body.type = {type: "OK"}
+        return body
+    }
 }

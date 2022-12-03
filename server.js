@@ -249,6 +249,29 @@ app.post('/api/logs', async function(req, res){
     }
 })
 
+app.post('/api/defaults', async function(req, res){
+    console.log(`Request: ${JSON.stringify(req.body)}`)
+    if(req.session.login != true || req.session.username != req.body.username){
+        res.end(JSON.stringify({type: "relog"}))
+        return
+    }
+
+    if(req.body.type == "get_cracker"){
+        res.end(JSON.stringify(await database.set_default_files(req.body.username, "cracker.exe")))
+        return
+    }
+
+    if(req.body.type == "get_hasher"){
+        res.end(JSON.stringify(await database.set_default_files(req.body.username, "hasher.exe")))
+        return
+    }
+
+    else{
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
+    }
+
+})
+
 var server = app.listen(4444, function () {
     var port = server.address().port
     console.log(`API running on port ${port}`)
