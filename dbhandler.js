@@ -14,6 +14,7 @@ module.exports = {
         }
         return ip
     },
+
     get_value: async function(user, key){
         var client = await MongoClient.connect(url, { useNewUrlParser: true })
         db = client.db("projecth");
@@ -255,6 +256,78 @@ module.exports = {
     },
 
     get_ip_data: async function(ip){
-        return {readme: await this.get_file(ip, "README.txt")}
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {ip: ip}
+        r = await collection.findOne(q)
+        
+        if(r == null){
+            return {type: "ERROR", message: "Could not connect to IP"}
+        }
+    
+        return {
+            type: "OK",
+            readme: await this.get_file(ip, "README.txt")
+        }
+    },
+
+    get_hardware: async function(user){
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {username: user}
+        r = await collection.findOne(q)
+        if(r == null){
+            q = {ip: user}
+            r = await collection.findOne(q)
+            if(r == null){
+                return null
+            }
+        }
+
+        let hardware = {}
+
+        if(await this.get_value(user, "hardware") == undefined){
+            hardware = {disk: "20", maxDisk: "50", cpu: "30", maxCpu: "50"}
+            await this.set_value(user, "hardware", hardware)
+            console.log(hardware)
+        } else{
+            hardware = await this.get_value(user, "hardware")
+            console.log(hardware)
+        }
+
+        let files = await this.get_value(user, "files")
+        let usedSpace = 0
+        console.log(files)
+        for(let file in files){
+            if(files[file].size != undefined){
+                usedSpace = usedSpace + files[file].size
+            }
+        }
+
+        body = {
+            type: "OK",
+            disk: usedSpace,
+            maxDisk: hardware.maxDisk,
+            cpu: hardware.cpu,
+            maxCpu: hardware.maxCpu
+        }
+
+        console.log(body)
+
+        client.close()
+        return body
+    },
+
+    set_default_files: async function(user, file){
+        let file = await this.get_file(user, file)
+        
+        if(file == null){
+            await this.add_file(user, {filename: file, content: "[EXECUTABLE FILE]"})
+        }
+
+        body.type = {type: "OK"}
+        return body
     }
 }

@@ -40,7 +40,8 @@ class Profile extends React.Component<{}, {creation_date: string, ip: any}>{
         <div style = {{marginTop: '16px', marginLeft: '16px'}}>
         <div style={{display: "grid", gridTemplateColumns: "auto auto"}}>
         <div>
-        <mui.Avatar sx={{ bgcolor: 'transparent', color:'white'}} style={{width: "124px", height: "124px", border: "white solid 2px"}}>
+        {/* TODO: let users change their pfp */}
+        <mui.Avatar src="/favicon.ico" sx={{ bgcolor: 'transparent', color:'white'}} style={{width: "124px", height: "124px", border: "white solid 2px"}}>
                 {user?.charAt(0).toUpperCase()}
         </mui.Avatar>
         </div>

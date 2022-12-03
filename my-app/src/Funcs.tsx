@@ -11,6 +11,13 @@ class Funcs{
         })
 
         let p = JSON.parse(await r.text())
+
+        try{
+            if(p.type == "relog"){
+                window.location.assign('/logout')
+            }
+        } catch{}
+
         return p
     })
 }
