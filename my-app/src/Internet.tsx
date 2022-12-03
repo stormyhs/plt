@@ -3,7 +3,6 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
 import * as mui from "@mui/material/"
-import { display } from '@mui/system'
 
 class Block extends React.Component<{label: string, title: string,}, {}>{
     render(){
@@ -23,22 +22,24 @@ class Block extends React.Component<{label: string, title: string,}, {}>{
             }}
         >
         <mui.Box sx={{ color: 'text.secondary' }}><mui.Typography>{this.props.label}</mui.Typography></mui.Box>
-        <mui.Box sx={{ color: 'text.primary', fontSize: 34, fontWeight: 'medium' }}>
-			<mui.Typography>{this.props.title}</mui.Typography></mui.Box>
-        </mui.Box>
-    )
-    }
-
+        
+			<mui.Box sx={{ color: 'text.primary', fontSize: 34, fontWeight: 'medium' }}>
+				<div style={{whiteSpace: "pre-wrap", wordBreak: "break-all"}}>
+					<mui.Typography>{this.props.title}</mui.Typography>
+				</div>
+			</mui.Box>
+        
+		</mui.Box>
+    )}
 }
 
 class Internet extends React.Component<{},
 {ip:string, connected:boolean, website:string,userInput:string,invalidInput:boolean,
-readme:string,downloader:boolean,opponentIP:string,clearButton:boolean}>{
+readme:string,downloader:boolean,clearButton:boolean}>{ // I HECKIN' LOVE TYPESCRIPT!!!
 	constructor(props: any){
 		super(props)
 		this.state = {
 			ip:"",
-			opponentIP:"",
 			userInput:"",
 			website:"",
 			readme:"",
@@ -48,24 +49,32 @@ readme:string,downloader:boolean,opponentIP:string,clearButton:boolean}>{
 			clearButton:false
 		}
 	}
+
 	async componentDidMount(){
 		let r = await Funcs.request('/api/user', {type: "get_user_info", username: localStorage.getItem("username")})
 		this.setState({ip:r.ip})
-	  }
+	}
 	
 	async handleClick(e: any){
 		let userInput = (document.getElementById("connect") as HTMLInputElement).value
 		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
 
-		this.setState({opponentIP:r.ip})
-		console.log(r.ip)
-		// for some reason does not return the other accounts IP and in the browser console returns "undefined" when logged
-		// i changed something, and now it does not work at all for some reason, but im too tired to figure it out, good luck
+		if(r.readme != null){
+			this.setState({readme:r.readme.content})
+			// console.log(r.readme.content)
+		}
 
 		if (r.type == "OK"){
 			this.setState({connected: true})
 			this.setState({invalidInput: false})
 			this.setState({downloader: false})
+
+			let userInput = (document.getElementById("connect") as HTMLInputElement).value
+			let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})		
+			if (this.state.downloader !== true){
+				this.setState({readme:r.readme.content})
+			}
+
 		} else if(userInput == "hackeracademy.com") {
 			this.setState({connected: false})
 			this.setState({invalidInput: false})
@@ -76,18 +85,14 @@ readme:string,downloader:boolean,opponentIP:string,clearButton:boolean}>{
 			this.setState({downloader: false})
 		}
 	}
-	async loadReadme(){
-		let userInput = (document.getElementById("connect") as HTMLInputElement).value
-		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})		
-		if (this.state.downloader !== true){
-			this.setState({readme:r.readme.content})
-		}
-	}
+
 	async handleClear(){
-		if (this.state.clearButton == false){
-			this.setState({clearButton: true})
-		}
+		(document.getElementById("connect") as HTMLInputElement).value = "";
+		this.setState({connected: false})
+		this.setState({invalidInput: false})
+		this.setState({downloader: false})
 	}
+
 	render(){
 	return(
 		<div>
@@ -105,7 +110,7 @@ readme:string,downloader:boolean,opponentIP:string,clearButton:boolean}>{
 			<h4 style={{marginBottom:"0px", marginLeft:"10px"}}>URL / IP</h4>
 			<mui.Stack direction="row" spacing={1}>
 				<mui.TextField id="connect" label="" defaultValue=""/>
-				<mui.Button variant="outlined" color="primary" onClick={this.handleClick.bind(this)}>
+				<mui.Button variant="outlined" color="primary" onClick={this.handleClear.bind(this)}>
 					Clear
 				</mui.Button>
 			</mui.Stack>
@@ -115,27 +120,12 @@ readme:string,downloader:boolean,opponentIP:string,clearButton:boolean}>{
 				<mui.Button variant="outlined" color="success" onClick={this.handleClick.bind(this)}>
 					Connect
 				</mui.Button>
-				<mui.Button variant="outlined" color="success" onClick={this.loadReadme.bind(this)}>
-					Load Readme
-					{/* I have gotten through despair trying to figure out how to break the text
-					in this readme file into new lines, hopefully it will be a brease for you to solve what i couldn't */}
-				</mui.Button>
 			</mui.Stack>
 			<br/>
-			<br/>
-			{this.state.invalidInput?
-			<div>
-				<mui.Typography variant="h5" gutterBottom>
-					Invalid URL / IP address
-				</mui.Typography>				
-			</div>
-			:
-			""
-			}
 			{this.state.connected?
 			<div>
 				<mui.Typography variant="h4" gutterBottom>
-					USER IP: {this.state.opponentIP}
+					USER IP: {(document.getElementById("connect") as HTMLInputElement).value}
 				</mui.Typography>
 				<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px", display: 'inline-block'}}>
 					<mui.Stack direction="column" spacing={2}>
@@ -159,6 +149,17 @@ readme:string,downloader:boolean,opponentIP:string,clearButton:boolean}>{
 						<Block label="IP's readme file" title={this.state.readme}/>
 					</mui.Box>
 				</div>
+			</div>
+			:
+			""
+			}
+			<br/>
+
+			{this.state.invalidInput?
+			<div>
+				<mui.Typography variant="h5" gutterBottom>
+					Invalid URL / IP address
+				</mui.Typography>				
 			</div>
 			:
 			""
