@@ -58,11 +58,20 @@ function RenameDialog(props: any) {
   );
 }
 
-class File extends React.Component<{filename: string, content: string, size: any, version?: any, buttons?: any}, {open: boolean, name: string}>{
+class File extends React.Component<{filename: string, content: string, size: any, version?: any, buttons?: any}, {open: boolean, name: string, tasks?: any}>{
   constructor(props: any){
     super(props)
-    this.state = {name: props.filename, open: false}
+    this.state = {name: props.filename, open: false, tasks: []}
     this.rename = this.rename.bind(this)
+  }
+
+  async componentDidMount(){
+    let payload = {
+      username: localStorage.getItem("username"),
+      type: "get_tasks"
+    }
+    let r = await Funcs.request('/api/system', payload)
+    this.setState({tasks: r.tasks})
   }
 
   async delete(){
@@ -87,6 +96,33 @@ class File extends React.Component<{filename: string, content: string, size: any
     console.log(`set name to ${newName}`)
   }
 
+  // TODO: use function props to pass the state from Storage
+  // instead of saving the same state on each File class
+
+  async startTask(name: string){
+    let r = await Funcs.request('/api/system', {type: 'start_task', task: {origin: name, activity: "Running"}, username: localStorage.getItem("username")})
+    if(r.type === "OK"){
+      let tasks = this.state.tasks
+      tasks.push({origin: name, activity: "Running"})
+      this.setState({tasks: tasks})
+    }
+  }
+
+  async stopTask(name: string){
+    let r = await Funcs.request('/api/system', {type: 'stop_task', task: name, username: localStorage.getItem("username")})
+    if(r.type === "OK"){
+      let tasks = this.state.tasks
+      let newTasks = []
+      for(let task in tasks){
+        if(tasks[task].origin != name){
+          newTasks.push(tasks[task])
+        }
+      }
+      this.setState({tasks: newTasks})
+      console.log(newTasks)
+    }
+  }
+
   getButtons(){
     let buttons = []
     let extention = this.state.name.split(".")[this.state.name.split(".").length - 1]
@@ -95,13 +131,20 @@ class File extends React.Component<{filename: string, content: string, size: any
       buttons.push(<mui.Button size="small" color="primary">Compile</mui.Button>)
     }
     if(extention === "exe"){
-      if(this.state.name !== "cracker.exe" && this.state.name !== "hasher.exe"){
-        buttons.push(<mui.Button size="small" color="primary">Run</mui.Button>)
+      let isRunning = false
+      for(let task in this.state.tasks){
+        if(this.state.tasks[task].origin == this.state.name){
+          isRunning = true
+          buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Stop</mui.Button>)
+        }
+      }
+      if(isRunning == false){
+        buttons.push(<mui.Button onClick={async (e) => await this.startTask(this.state.name)} size="small" color="primary">Run</mui.Button>)
       }
     }
 
     if(this.state.name === "cracker.exe" || this.state.name === "hasher.exe"){
-      buttons.push(<mui.Button size="small" color="primary">Upgrade</mui.Button>)
+      buttons.push(<mui.Button sx={{maxWidth: "fit-content"}} size="small" color="primary">Upgrade</mui.Button>)
     }
 
     buttons.push(<mui.Button size="small" color="primary"onClick={this.delete.bind(this)}>Delete</mui.Button>)
@@ -153,7 +196,9 @@ class File extends React.Component<{filename: string, content: string, size: any
             return button
           })}
 
-          <mui.Button size="small" color="primary"
+          {this.state.name !== "cracker.exe" && this.state.name !== "hasher.exe"?
+          <>
+            <mui.Button size="small" color="primary"
             onClick={this.handleClickOpen.bind(this)}
             >
               Rename
@@ -163,13 +208,18 @@ class File extends React.Component<{filename: string, content: string, size: any
             onClose={this.handleClose.bind(this)}
             old={this.state.name}
             rename={this.rename}
-          />
+            />
+          </>
+          :
+          ""
+          }
+
 
           </mui.CardActions>
         </mui.Card>
         </>
     )
-    }
+  }
 }
 
 class Storage extends React.Component<{}, {files: any}>{

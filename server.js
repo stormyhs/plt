@@ -272,6 +272,46 @@ app.post('/api/defaults', async function(req, res){
 
 })
 
+app.post('/api/system', async function(req, res){
+    console.log(`Request: ${JSON.stringify(req.body)}`)
+    if(req.session.login != true || req.session.username != req.body.username){
+        res.end(JSON.stringify({type: "relog"}))
+        return
+    }
+
+    if(req.body.type == "get_tasks"){
+        res.end(JSON.stringify(await database.get_tasks(req.body.username, "tasks")))
+        return
+    }
+
+    if(req.body.type == "start_task"){
+        let argStatus = checkArgs(req.body, ['task'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+
+        res.end(JSON.stringify(await database.start_task(req.body.username, req.body.task)))
+        return
+    }
+
+    if(req.body.type == "stop_task"){
+        let argStatus = checkArgs(req.body, ['task'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+
+        res.end(JSON.stringify(await database.stop_task(req.body.username, req.body.task)))
+        return
+    }
+
+    else{
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
+    }
+
+})
+
 var server = app.listen(4444, function () {
     var port = server.address().port
     console.log(`API running on port ${port}`)

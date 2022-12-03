@@ -141,7 +141,8 @@ module.exports = {
             if(f.filename == file){
                 body = {
                     filename: f.filename,
-                    content: f.content
+                    content: f.content,
+                    size: f.size
                 }
             }
         })
@@ -288,37 +289,135 @@ module.exports = {
         }
 
         let hardware = {}
-
         if(await this.get_value(user, "hardware") == undefined){
             hardware = {disk: "20", maxDisk: "50", cpu: "30", maxCpu: "50"}
             await this.set_value(user, "hardware", hardware)
-            console.log(hardware)
         } else{
             hardware = await this.get_value(user, "hardware")
-            console.log(hardware)
-        }
-
-        let files = await this.get_value(user, "files")
-        let usedSpace = 0
-        console.log(files)
-        for(let file in files){
-            if(files[file].size != undefined){
-                usedSpace = usedSpace + files[file].size
-            }
         }
 
         body = {
             type: "OK",
-            disk: usedSpace,
+            disk: 0,
             maxDisk: hardware.maxDisk,
-            cpu: hardware.cpu,
+            cpu: 0,
             maxCpu: hardware.maxCpu
         }
 
-        console.log(body)
+        // Disk
+        let files = await this.get_value(user, "files")
+        console.log(files)
+        for(let file in files){
+            if(files[file].size != undefined){
+                body.disk = body.disk + files[file].size
+            }
+        }
+
+        // CPU
+        tasks = await this.get_value(user, "tasks")
+        for(let task in tasks){
+            let file = await this.get_file(user, tasks[task].origin)
+            if(file != undefined){
+                console.log(`cpu was ${body.cpu}`)
+                body.cpu = body.cpu + (file.size * 2)
+                console.log(`file is ${file.size}`)
+            }
+        }
 
         client.close()
         return body
+    },
+
+    get_tasks: async function(user){
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {username: user}
+        r = await collection.findOne(q)
+        if(r == null){
+            q = {ip: user}
+            r = await collection.findOne(q)
+            if(r == null){
+                return null
+            }
+        }
+
+        let tasks = await this.get_value(user, "tasks")
+        if(tasks == undefined){
+            tasks = []
+        }
+        return {type: "OK", tasks: tasks}
+    },
+
+    start_task: async function(user, task){
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {username: user}
+        r = await collection.findOne(q)
+        if(r == null){
+            q = {ip: user}
+            r = await collection.findOne(q)
+            if(r == null){
+                return null
+            }
+        }
+
+        let tasks = await this.get_value(user, "tasks")
+        let files = await this.get_value(user, "files")
+        if(tasks == undefined){
+            tasks = []
+        }
+
+        isRunning = false
+        for(let runningTask in tasks){
+            if(tasks[runningTask].origin == task.origin){
+                isRunning = true
+            }
+        }
+        if(isRunning){
+            return {type: "ERROR", message: "Task already running."}
+        }
+
+        originExists = false
+        for(let file in files){
+            if(files[file].filename == task.origin){
+                originExists = true
+            }
+        }
+        if(!originExists){
+            return {type: "ERROR", message: "Task origin does not exist.", origin: task}
+        }
+
+        tasks.push(task)
+        await this.set_value(user, "tasks", tasks)
+        return {type: "OK", tasks: tasks}
+    },
+
+    stop_task: async function(user, task){
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {username: user}
+        r = await collection.findOne(q)
+        if(r == null){
+            q = {ip: user}
+            r = await collection.findOne(q)
+            if(r == null){
+                return null
+            }
+        }
+
+        let tasks = await this.get_value(user, "tasks")
+        let newTasks = []
+        for(let item in tasks){
+            if(tasks[item].origin != task){
+                newTasks.push(tasks[item])
+            }
+        }
+
+        await this.set_value(user, "tasks", newTasks)
+        return {type: "OK", newTasks: newTasks}
     },
 
     set_default_files: async function(user, file){

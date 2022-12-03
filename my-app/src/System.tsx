@@ -32,10 +32,10 @@ class Block extends React.Component<{label: string, title: string}, {}>{
     }
 }
 
-class System extends React.Component<{}, {hardware: any}>{
+class System extends React.Component<{}, {hardware: any, tasks: any}>{
     constructor(props: any){
         super(props)
-        this.state = {hardware: {}}
+        this.state = {hardware: {}, tasks: []}
     }
 
     async componentDidMount(){
@@ -44,8 +44,15 @@ class System extends React.Component<{}, {hardware: any}>{
             type: "get_hardware"
         }
         let r = await Funcs.request('/api/hardware', payload)
-        console.log(r)
         this.setState({hardware: {cpu: r.cpu, maxCpu: r.maxCpu, disk: r.disk, maxDisk: r.maxDisk}})
+
+        payload = {
+            username: localStorage.getItem("username"),
+            type: "get_tasks"
+        }
+        r = await Funcs.request('/api/system', payload)
+        this.setState({tasks: r.tasks})
+        console.log(r.cpu)
     }
 
     render(){
@@ -60,9 +67,7 @@ class System extends React.Component<{}, {hardware: any}>{
 
             <div style={{display: 'grid', gridTemplateColumns: 'auto auto', gridTemplateRows: 'auto auto', marginLeft: "20px"}}>
                 <div>
-                <h1> System </h1>
                 <h2> Hardware Usage</h2>
-
                 <mui.Box style={{display: "flex", "alignItems": "center"}}>
                     <MemoryOutlinedIcon/>
                     <mui.Typography variant="h5" color="text.primary" style={{marginRight: "10px"}}>{'CPU'}</mui.Typography>
@@ -79,16 +84,14 @@ class System extends React.Component<{}, {hardware: any}>{
                 </div>
 
                 <div style={{marginLeft: "10vw"}}>
-                    <h2>Status</h2>
-                    <mui.Alert severity='success' variant='filled'>All systems operational</mui.Alert>
-                </div>
-
-                <div>
-                <h2> Your Botnet </h2>
-
-                <Block label="DDoSers" title="94 Bots"/>
-                <Block label="Miners" title="69 Miners"/>
-                <Block label="Slaves" title="420 Slaves"/>
+                    <h2>Running tasks</h2>
+                    {this.state.tasks != undefined && this.state.tasks.length > 0?
+                    this.state.tasks.map((task: any) =>{
+                        return <Block label={task.origin} title={task.activity}/>
+                    })
+                    :
+                    ""
+                    }
                 </div>
             </div>
 
