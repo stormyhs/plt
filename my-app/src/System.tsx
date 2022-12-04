@@ -7,7 +7,57 @@ import Funcs from './Funcs'
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
 import MemoryOutlinedIcon from '@mui/icons-material/MemoryOutlined';
 
-class Block extends React.Component<{label: string, title: string}, {}>{
+function secsToTime(duration: any) //https://stackoverflow.com/a/11486026
+{   
+    // Hours, minutes and seconds
+    let hrs = ~~(duration / 3600);
+    let mins = ~~((duration % 3600) / 60);
+    let secs = ~~duration % 60;
+
+    // Output like "1:01" or "4:03:59" or "123:03:59"
+    let ret = "";
+
+    if (hrs > 0) {
+        ret += "" + hrs + ":" + (mins < 10 ? "0" : "");
+    }
+
+    ret += "" + mins + ":" + (secs < 10 ? "0" : "");
+    ret += "" + secs;
+    return ret;
+}
+
+class Block extends React.Component<{label: string, title: string, ETA?: number}, {ETA?: any}>{
+    constructor(props: any){
+        super(props)
+        this.state = {ETA: props.ETA}
+    }
+
+    async componentDidMount(){
+        if(this.props.ETA != undefined){
+            let time = Math.round((new Date()).getTime() / 1000)
+            if(this.props.ETA <= time){
+                this.setState({ETA: "ETA: Done - Restart EXE"})
+            } else{
+                let timeLeft = this.props.ETA - Math.round((new Date()).getTime() / 1000);
+                this.setState({ETA: `ETA: ${secsToTime(timeLeft)}`})
+                await this.counter()
+            }
+        }
+    }
+
+    async counter(){
+        function sleep(ms: number){
+          return new Promise(resolve => setTimeout(resolve, ms))
+        }
+        
+        while(this.props.ETA != undefined && this.props.ETA > Math.round((new Date()).getTime() / 1000)){
+            let timeLeft = this.props.ETA - Math.round((new Date()).getTime() / 1000);
+            this.setState({ETA: `ETA: ${secsToTime(timeLeft)}`})
+            await sleep(1000)
+        }
+        this.setState({ETA: "ETA: Done - Restart EXE"})
+      }
+
     render(){
     return(
         <mui.Box
@@ -25,11 +75,14 @@ class Block extends React.Component<{label: string, title: string}, {}>{
             minWidth: 300,
             }}
         >
-        <mui.Box sx={{ color: 'text.secondary' }}>{this.props.label}</mui.Box>
-            <mui.Box sx={{ color: 'text.primary', fontSize: 34, fontWeight: 'medium' }}>{this.props.title}</mui.Box>
+        <mui.Box sx={{color: 'text.secondary'}}>{this.props.label}</mui.Box>
+            <mui.Box sx={{color: 'text.primary', fontSize: 34, fontWeight: 'medium'}}>{this.props.title}</mui.Box>
+            {this.props.ETA?
+            <mui.Box sx={{color: 'text.secondary'}}>{this.state.ETA}</mui.Box>
+            :""
+            }
         </mui.Box>
-    )
-    }
+    )}
 }
 
 class System extends React.Component<{}, {hardware: any, tasks: any}>{
@@ -87,12 +140,13 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
                     <h2>Running tasks</h2>
                     {this.state.tasks != undefined && this.state.tasks.length > 0?
                     this.state.tasks.map((task: any) =>{
-                        return <Block label={task.origin} title={task.activity}/>
+                        return <Block label={task.origin} title={task.activity} ETA={Number(task.ETA)}/>
                     })
                     :
                     ""
                     }
                 </div>
+
             </div>
 
             </div>

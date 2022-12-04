@@ -123,6 +123,15 @@ class File extends React.Component<{filename: string, content: string, size: any
     }
   }
 
+  async startUpgrade(name: string){
+    let r = await Funcs.request('/api/upgrade', {type: 'start_upgrade', file: name, username: localStorage.getItem("username")})
+    if(r.type === "OK"){
+      let tasks = this.state.tasks
+      tasks.push({origin: name, activity: "Upgrading"})
+      this.setState({tasks: tasks})
+    }
+  }
+
   getButtons(){
     let buttons = []
     let extention = this.state.name.split(".")[this.state.name.split(".").length - 1]
@@ -144,7 +153,7 @@ class File extends React.Component<{filename: string, content: string, size: any
     }
 
     if(this.state.name === "cracker.exe" || this.state.name === "hasher.exe"){
-      buttons.push(<mui.Button sx={{maxWidth: "fit-content"}} size="small" color="primary">Upgrade</mui.Button>)
+      buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} sx={{maxWidth: "fit-content"}} size="small" color="primary">Upgrade</mui.Button>)
     }
 
     buttons.push(<mui.Button size="small" color="primary"onClick={this.delete.bind(this)}>Delete</mui.Button>)
