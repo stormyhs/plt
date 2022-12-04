@@ -69,10 +69,6 @@ readme:string,downloader:boolean,}>{
 		let userInput = (document.getElementById("connect") as HTMLInputElement).value
 		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
 
-		if(r.readme != null){
-			this.setState({readme:r.readme.content})
-		}
-
 		if (r.type == "OK"){
 			this.setState({connected: true})
 			this.setState({invalidInput: false})
@@ -81,7 +77,11 @@ readme:string,downloader:boolean,}>{
 			let userInput = (document.getElementById("connect") as HTMLInputElement).value
 			let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})		
 			if (this.state.downloader !== true){
-				this.setState({readme:r.readme.content})
+				if(r.readme == null){
+					this.setState({readme:""})
+				} else{
+					this.setState({readme:r.readme.content})
+				}
 			}
 
 		} else if(userInput == "hackeracademy.com") {
@@ -131,9 +131,6 @@ readme:string,downloader:boolean,}>{
 
 			{this.state.connected?
 			<div>
-				<mui.Typography variant="h4" gutterBottom>
-					USER IP: {(document.getElementById("connect") as HTMLInputElement).value}
-				</mui.Typography>
 				<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px", display: 'inline-block'}}>
 					<mui.Stack direction="column" spacing={2}>
 						<mui.Button variant="outlined" size="small" color="error" 
@@ -155,7 +152,7 @@ readme:string,downloader:boolean,}>{
 				<br/>
 				<div>
 					<mui.Box>
-						<Block label="IP's readme file" title={this.state.readme}/>
+						<Block label="IP's README.txt" title={this.state.readme}/>
 					</mui.Box>
 				</div>
 			</div>
