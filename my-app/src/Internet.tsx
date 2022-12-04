@@ -152,7 +152,17 @@ readme:string,downloader:boolean,}>{
 				<br/>
 				<div>
 					<mui.Box>
-						<Block label="IP's README.txt" title={this.state.readme}/>
+						<mui.Typography variant="h6">
+							IP's README.txt
+						</mui.Typography>
+						<mui.TextField style={{marginTop: "20px", width: "30vw"}}
+              				spellCheck="false"
+              				fullWidth
+              				label=""
+              				multiline
+              				rows={10}
+              				defaultValue={this.state.readme}
+            			/>
 					</mui.Box>
 				</div>
 			</div>
