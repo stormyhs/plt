@@ -424,18 +424,23 @@ module.exports = {
         let tasks = await this.get_value(user, "tasks")
         let files = await this.get_value(user, "files")
         if(tasks == undefined){
-            tasks = []
+            tasks = {}
         }
 
+        
         isRunning = false
-        for(let runningTask in tasks){
-            if(tasks[runningTask].origin == task.origin){
-                isRunning = true
-            }
+        if(tasks[task.origin] != undefined && tasks[task.origin].activity == task.activity){
+            isRunning = true
         }
         if(isRunning){
             return {type: "ERROR", message: "Task already running."}
         }
+
+        // for(let runningTask in tasks){
+        //     if(tasks[runningTask].origin == task.origin && tasks[runningTask].activity == task.activity){
+        //         isRunning = true
+        //     }
+        // }
 
         originExists = false
         for(let file in files){

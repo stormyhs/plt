@@ -100,7 +100,13 @@ class File extends React.Component<{filename: string, content: string, size: any
   // instead of saving the same state on each File class
 
   async startTask(name: string){
-    let r = await Funcs.request('/api/system', {type: 'start_task', task: {origin: name, activity: "Running"}, username: localStorage.getItem("username")})
+    let r = await Funcs.request('/api/system',
+      {type: 'start_task',
+      task: {
+        name: {origin: name, activity: "Running"}
+      },
+      username: localStorage.getItem("username")})
+      
     if(r.type === "OK"){
       let tasks = this.state.tasks
       tasks.push({origin: name, activity: "Running"})
@@ -141,20 +147,31 @@ class File extends React.Component<{filename: string, content: string, size: any
     }
     if(extention === "exe"){
       let isRunning = false
+      var isUpgrading = false
+      
       for(let task in this.state.tasks){
         if(this.state.tasks[task].origin == this.state.name){
-          isRunning = true
-          buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Stop</mui.Button>)
+          if(this.state.tasks[task].activity == "Running"){
+            isRunning = true
+            buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Running</mui.Button>)
+          } else
+          if(this.state.tasks[task].activity == "Upgrading"){
+            buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Upgrading</mui.Button>)
+            isUpgrading = false
+          }
         }
       }
       if(isRunning == false){
         buttons.push(<mui.Button onClick={async (e) => await this.startTask(this.state.name)} size="small" color="primary">Run</mui.Button>)
       }
+      if(isUpgrading == false){
+        buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} size="small" color="primary">Upgrade</mui.Button>)
+      }
     }
 
-    if(this.state.name === "cracker.exe" || this.state.name === "hasher.exe"){
-      buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} sx={{maxWidth: "fit-content"}} size="small" color="primary">Upgrade</mui.Button>)
-    }
+    // if(this.state.name === "cracker.exe" || this.state.name === "hasher.exe"){
+    //   buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} sx={{maxWidth: "fit-content"}} size="small" color="primary">Upgrade</mui.Button>)
+    // }
 
     buttons.push(<mui.Button size="small" color="primary"onClick={this.delete.bind(this)}>Delete</mui.Button>)
     return buttons
@@ -231,15 +248,17 @@ class File extends React.Component<{filename: string, content: string, size: any
   }
 }
 
-class Storage extends React.Component<{}, {files: any}>{
+class Storage extends React.Component<{}, {files: any, tasks: any}>{
   constructor(props: any){
     super(props)
-    this.state = {files: []}
+    this.state = {files: [], tasks: []}
   }
 
   async componentDidMount(){
     let r = await Funcs.request('/api/storage', {type: "get_files", username: localStorage.getItem("username")})
     this.setState({files: r})
+    r = await Funcs.request('/api/system', {type: "get_tasks", username: localStorage.getItem("username")})
+    this.setState({tasks: r})
   }
 
 	render(){
