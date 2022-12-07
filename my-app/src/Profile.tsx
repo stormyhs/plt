@@ -53,7 +53,7 @@ class Profile extends React.Component<{}, {creation_date: string, ip: any}>{
         </div>
 
         <div style={{marginTop: '16px',maxWidth: '300px'}}>
-        <mui.Card variant="outlined">      
+        <mui.Card variant="outlined" style= {{border:"white solid 1px"}}>      
         <mui.List sx={{ width: '100%' , bgcolor: 'background.paper' }}>
         <mui.ListItem>
                 <mui.ListItemAvatar>
