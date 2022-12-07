@@ -58,20 +58,11 @@ function RenameDialog(props: any) {
   );
 }
 
-class File extends React.Component<{filename: string, content: string, size: any, version?: any, buttons?: any}, {open: boolean, name: string, tasks?: any}>{
+class File extends React.Component<{filename: string, content: string, size: any, version?: any, taskHandler: any, fileStatus: any}, {open: boolean, name: string}>{
   constructor(props: any){
     super(props)
-    this.state = {name: props.filename, open: false, tasks: []}
+    this.state = {name: props.filename, open: false}
     this.rename = this.rename.bind(this)
-  }
-
-  async componentDidMount(){
-    let payload = {
-      username: localStorage.getItem("username"),
-      type: "get_tasks"
-    }
-    let r = await Funcs.request('/api/system', payload)
-    this.setState({tasks: r.tasks})
   }
 
   async delete(){
@@ -99,50 +90,6 @@ class File extends React.Component<{filename: string, content: string, size: any
   // TODO: use function props to pass the state from Storage
   // instead of saving the same state on each File class
 
-  async startTask(name: string){
-    let r = await Funcs.request('/api/system',
-      {type: 'start_task',
-      origin: name,
-      activity: "Running",
-      username: localStorage.getItem("username")
-      })
-      
-    if(r.type === "OK"){
-      let tasks = this.state.tasks
-      tasks[name] = {origin: name, activity: "Running"}
-      this.setState({tasks: tasks})
-    }
-  }
-
-  async stopTask(name: string){
-    let r = await Funcs.request('/api/system', {type: 'stop_task', task: name, username: localStorage.getItem("username")})
-    if(r.type === "OK"){
-      let tasks = this.state.tasks
-      let newTasks: any = {}
-      for(let task in tasks){
-        if(tasks[task].origin != name){
-          newTasks[task] = tasks[task]
-        }
-      }
-      this.setState({tasks: newTasks})
-    }
-  }
-
-  async startUpgrade(name: string){
-    let r = await Funcs.request('/api/system',
-      {type: 'start_task',
-      origin: name,
-      activity: "Upgrading",
-      username: localStorage.getItem("username")
-    })
-
-    if(r.type === "OK"){
-      let tasks = this.state.tasks
-      tasks[name] = {origin: name, activity: "Upgrading"}
-      this.setState({tasks: tasks})
-    }
-  }
-
   getButtons(){
     let buttons = []
     let extention = this.state.name.split(".")[this.state.name.split(".").length - 1]
@@ -151,54 +98,18 @@ class File extends React.Component<{filename: string, content: string, size: any
       buttons.push(<mui.Button size="small" color="primary">Compile</mui.Button>)
     }
     if(extention === "exe"){
-      let isRunning = false
-      let isUpgrading = false
-      
-      console.log(this.state.tasks)
-      console.log(this.state.tasks[this.state.name])
-      if(this.state.tasks[this.state.name] != undefined){
-        if(this.state.tasks[this.state.name].activity === "Running"){
-          isRunning = true
-        }
-        if(this.state.tasks[this.state.name].activity === "Upgrading"){
-          isUpgrading = true
-        }
-      }
-
-      if(isRunning){
-        buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Running</mui.Button>)
+      let status = this.props.fileStatus(this.state.name, "getStatus")
+      if(status.running){
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Running</mui.Button>)
       } else{
-        buttons.push(<mui.Button onClick={async (e) => await this.startTask(this.state.name)} size="small" color="primary">Run</mui.Button>)
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "start")} size="small" color="primary">Run</mui.Button>)
       }
-      if(isUpgrading){
-        buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Upgrading</mui.Button>)
+      if(status.upgrading){
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Upgrading</mui.Button>)
       } else{
-        buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} size="small" color="primary">Upgrade</mui.Button>)
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "upgrade")} size="small" color="primary">Upgrade</mui.Button>)
       }
-
-      // for(let task in this.state.tasks){
-      //   if(this.state.tasks[task].origin == this.state.name){
-      //     if(this.state.tasks[task].activity == "Running"){
-      //       isRunning = true
-      //       buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Running</mui.Button>)
-      //     } else
-      //     if(this.state.tasks[task].activity == "Upgrading"){
-      //       buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Upgrading</mui.Button>)
-      //       isUpgrading = false
-      //     }
-      //   }
-      // }
-      // if(isRunning == false){
-      //   buttons.push(<mui.Button onClick={async (e) => await this.startTask(this.state.name)} size="small" color="primary">Run</mui.Button>)
-      // }
-      // if(isUpgrading == false){
-      //   buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} size="small" color="primary">Upgrade</mui.Button>)
-      // }
     }
-
-    // if(this.state.name === "cracker.exe" || this.state.name === "hasher.exe"){
-    //   buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} sx={{maxWidth: "fit-content"}} size="small" color="primary">Upgrade</mui.Button>)
-    // }
 
     buttons.push(<mui.Button size="small" color="primary"onClick={this.delete.bind(this)}>Delete</mui.Button>)
     return buttons
@@ -279,13 +190,78 @@ class Storage extends React.Component<{}, {files: any, tasks: any}>{
   constructor(props: any){
     super(props)
     this.state = {files: [], tasks: []}
+    this.taskHandler = this.taskHandler.bind(this)
+    this.fileStatus = this.fileStatus.bind(this)
   }
 
   async componentDidMount(){
     let r = await Funcs.request('/api/storage', {type: "get_files", username: localStorage.getItem("username")})
     this.setState({files: r})
     r = await Funcs.request('/api/system', {type: "get_tasks", username: localStorage.getItem("username")})
-    this.setState({tasks: r})
+    this.setState({tasks: r.tasks})
+  }
+
+  async taskHandler(name: string, type: string){
+    if(type == "start"){
+      let r = await Funcs.request('/api/system',
+        {type: 'start_task',
+        origin: name,
+        activity: "Running",
+        username: localStorage.getItem("username")
+        })
+        
+      if(r.type === "OK"){
+        let tasks = this.state.tasks
+        tasks[name] = {origin: name, activity: "Running"}
+        this.setState({tasks: tasks})
+      }
+    }
+
+    if(type == "stop"){
+      let r = await Funcs.request('/api/system', {type: 'stop_task', task: name, username: localStorage.getItem("username")})
+      if(r.type === "OK"){
+        let tasks = this.state.tasks
+        let newTasks: any = {}
+        for(let task in tasks){
+          if(tasks[task].origin != name){
+            newTasks[task] = tasks[task]
+          }
+        }
+        this.setState({tasks: newTasks})
+      }
+    }
+
+    if(type == "upgrade"){
+      let r = await Funcs.request('/api/system',
+      {type: 'start_task',
+      origin: name,
+      activity: "Upgrading",
+      username: localStorage.getItem("username")
+      })
+
+      if(r.type === "OK"){
+        let tasks = this.state.tasks
+        tasks[name] = {origin: name, activity: "Upgrading"}
+        this.setState({tasks: tasks})
+      }
+    }
+  }
+
+  fileStatus(name: string){
+    let status = {
+      running: false,
+      upgrading: false
+    }
+
+    if(this.state.tasks[name] != undefined){
+      if(this.state.tasks[name].activity === "Running"){
+        status.running = true
+      }
+      if(this.state.tasks[name].activity === "Upgrading"){
+        status.upgrading = true
+      }
+    }
+    return status
   }
 
 	render(){
@@ -304,7 +280,14 @@ class Storage extends React.Component<{}, {files: any, tasks: any}>{
 	        ?
 	        (<>
 	            {this.state.files.map((file: any) =>{
-	                return  <><File filename={file.filename} content={file.content} size={file.size} version={file.version}/></>
+	                return <><File
+                  filename={file.filename}
+                  content={file.content}
+                  size={file.size}
+                  version={file.version}
+                  taskHandler={this.taskHandler}
+                  fileStatus={this.fileStatus}
+                  /></>
 	            })}
 	        </>)
 	        :

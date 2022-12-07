@@ -420,8 +420,6 @@ module.exports = {
             tasks = {}
         }
 
-        console.log(`Tasks: ${tasks}`)
-        console.log(tasks)
         isRunning = false
         if(tasks[origin] != undefined && tasks[origin].activity == activity){
             isRunning = true
@@ -437,13 +435,18 @@ module.exports = {
             }
         }
         if(!originExists){
-            return {type: "ERROR", message: "Task origin does not exist.", origin: task}
+            return {type: "ERROR", message: "Task origin does not exist.", origin: origin}
         }
 
+        ETA = undefined
+        if(activity == "Upgrading"){
+            ETA = this.unixTime() + 60
+        }
         tasks[origin] = {
             origin: origin,
-            activity: activity
-        }
+            activity: activity,
+            ETA: ETA
+         }
         await this.set_value(user, "tasks", tasks)
         return {type: "OK", tasks: tasks}
     },
