@@ -1,6 +1,10 @@
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://localhost:27017/";
+
 module.exports = {
+    unixTime: function(){
+        return Math.round((new Date()).getTime() / 1000);
+    },
     random_number: function(min=0, max=9) { 
         return Math.floor(Math.random() * (max - min) + min);
     },
@@ -175,6 +179,12 @@ module.exports = {
             }
         }
         r = await collection.updateOne(q, data)
+
+        let extention = file.split(".")[file.split(".").length-1]
+        if(extention == "exe"){
+            await this.stop_task(user, file)
+        }
+
         client.close()
         return {type: "OK"}
     },
@@ -196,6 +206,40 @@ module.exports = {
         r.files.forEach(function(element){
             if(element.filename == oldName){
                 element.filename = newName
+            }
+            new_files.push(element)
+        })
+        data = {
+            $set:{
+                files: new_files
+            }
+        }
+        r = await collection.updateOne(q, data)
+        client.close()
+        return {type: "OK"}
+    },
+
+    upgrade_file: async function(user, file){
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {username: user}
+        r = await collection.findOne(q)
+        if(r == null){
+            q = {ip: user}
+            r = await collection.findOne(q)
+            if(r == null){
+                return null
+            }
+        }
+        let new_files = []
+        r.files.forEach(function(element){
+            if(element.filename == file){
+                if(element.version != undefined){
+                    element.version = Number(element.version) + 1
+                } else{
+                    element.version = 2
+                }
             }
             new_files.push(element)
         })
@@ -306,7 +350,6 @@ module.exports = {
 
         // Disk
         let files = await this.get_value(user, "files")
-        console.log(files)
         for(let file in files){
             if(files[file].size != undefined){
                 body.disk = body.disk + files[file].size
@@ -318,9 +361,7 @@ module.exports = {
         for(let task in tasks){
             let file = await this.get_file(user, tasks[task].origin)
             if(file != undefined){
-                console.log(`cpu was ${body.cpu}`)
                 body.cpu = body.cpu + (file.size * 2)
-                console.log(`file is ${file.size}`)
             }
         }
 
@@ -344,12 +385,22 @@ module.exports = {
 
         let tasks = await this.get_value(user, "tasks")
         if(tasks == undefined){
-            tasks = []
+            tasks = {}
+        }
+
+        for(let task in tasks){
+            if(tasks[task].ETA != null && tasks[task].ETA <= this.unixTime()){
+                if(tasks[task].activity == "Upgrading"){
+                    await this.stop_task(user, tasks[task].origin)
+                    await this.upgrade_file(user, tasks[task].origin)
+                    await this.start_task(user, {origin: tasks[task].origin, activity: "Running"})
+                }
+            }
         }
         return {type: "OK", tasks: tasks}
     },
 
-    start_task: async function(user, task){
+    start_task: async function(user, origin, activity){
         var client = await MongoClient.connect(url, { useNewUrlParser: true })
         db = client.db("projecth");
         collection = db.collection("users");
@@ -366,14 +417,12 @@ module.exports = {
         let tasks = await this.get_value(user, "tasks")
         let files = await this.get_value(user, "files")
         if(tasks == undefined){
-            tasks = []
+            tasks = {}
         }
 
         isRunning = false
-        for(let runningTask in tasks){
-            if(tasks[runningTask].origin == task.origin){
-                isRunning = true
-            }
+        if(tasks[origin] != undefined && tasks[origin].activity == activity){
+            isRunning = true
         }
         if(isRunning){
             return {type: "ERROR", message: "Task already running."}
@@ -381,15 +430,23 @@ module.exports = {
 
         originExists = false
         for(let file in files){
-            if(files[file].filename == task.origin){
+            if(files[file].filename == origin){
                 originExists = true
             }
         }
         if(!originExists){
-            return {type: "ERROR", message: "Task origin does not exist.", origin: task}
+            return {type: "ERROR", message: "Task origin does not exist.", origin: origin}
         }
 
-        tasks.push(task)
+        ETA = undefined
+        if(activity == "Upgrading"){
+            ETA = this.unixTime() + 60
+        }
+        tasks[origin] = {
+            origin: origin,
+            activity: activity,
+            ETA: ETA
+         }
         await this.set_value(user, "tasks", tasks)
         return {type: "OK", tasks: tasks}
     },
@@ -409,10 +466,10 @@ module.exports = {
         }
 
         let tasks = await this.get_value(user, "tasks")
-        let newTasks = []
+        let newTasks = {}
         for(let item in tasks){
             if(tasks[item].origin != task){
-                newTasks.push(tasks[item])
+                newTasks[task] = tasks[item]
             }
         }
 

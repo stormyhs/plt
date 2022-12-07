@@ -40,6 +40,10 @@ function checkArgs(req, args){
     return argStatus
 }
 
+function unixTime(){
+    return Math.round((new Date()).getTime() / 1000);
+}
+
 app.post('/api/news', async (req, res) =>{
     console.log(`Request: ${JSON.stringify(req.body)}`)
     res.end(JSON.stringify(
@@ -285,13 +289,13 @@ app.post('/api/system', async function(req, res){
     }
 
     if(req.body.type == "start_task"){
-        let argStatus = checkArgs(req.body, ['task'])
+        let argStatus = checkArgs(req.body, ['activity', 'origin'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
-
-        res.end(JSON.stringify(await database.start_task(req.body.username, req.body.task)))
+        
+        res.end(JSON.stringify(await database.start_task(req.body.username, req.body.origin, req.body.activity)))
         return
     }
 
@@ -304,6 +308,29 @@ app.post('/api/system', async function(req, res){
 
         res.end(JSON.stringify(await database.stop_task(req.body.username, req.body.task)))
         return
+    }
+
+    else{
+        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
+    }
+
+})
+
+app.post('/api/upgrade', async function(req, res){
+    console.log(`Request: ${JSON.stringify(req.body)}`)
+    if(req.session.login != true || req.session.username != req.body.username){
+        res.end(JSON.stringify({type: "relog"}))
+        return
+    }
+
+    if(req.body.type == "start_upgrade"){
+        let argStatus = checkArgs(req.body, ['file'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+        let task = {origin: req.body.file, activity: "Upgrading", ETA: unixTime() + 60}
+        res.end(JSON.stringify(await database.start_task(req.body.username, task)))
     }
 
     else{
