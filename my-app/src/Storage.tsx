@@ -195,10 +195,10 @@ class Storage extends React.Component<{}, {files: any, tasks: any}>{
   }
 
   async componentDidMount(){
-    let r = await Funcs.request('/api/storage', {type: "get_files", username: localStorage.getItem("username")})
-    this.setState({files: r})
-    r = await Funcs.request('/api/system', {type: "get_tasks", username: localStorage.getItem("username")})
+    let r = await Funcs.request('/api/system', {type: "get_tasks", username: localStorage.getItem("username")})
     this.setState({tasks: r.tasks})
+    r = await Funcs.request('/api/storage', {type: "get_files", username: localStorage.getItem("username")})
+    this.setState({files: r})
   }
 
   async taskHandler(name: string, type: string){

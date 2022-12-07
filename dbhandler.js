@@ -383,20 +383,13 @@ module.exports = {
             }
         }
 
+        await this.check_upgrade_tasks(user)
+
         let tasks = await this.get_value(user, "tasks")
         if(tasks == undefined){
             tasks = {}
         }
-
-        for(let task in tasks){
-            if(tasks[task].ETA != null && tasks[task].ETA <= this.unixTime()){
-                if(tasks[task].activity == "Upgrading"){
-                    await this.stop_task(user, tasks[task].origin)
-                    await this.upgrade_file(user, tasks[task].origin)
-                    await this.start_task(user, {origin: tasks[task].origin, activity: "Running"})
-                }
-            }
-        }
+        
         return {type: "OK", tasks: tasks}
     },
 
@@ -475,6 +468,36 @@ module.exports = {
 
         await this.set_value(user, "tasks", newTasks)
         return {type: "OK", newTasks: newTasks}
+    },
+
+    check_upgrade_tasks: async function(user){
+        var client = await MongoClient.connect(url, { useNewUrlParser: true })
+        db = client.db("projecth");
+        collection = db.collection("users");
+        q = {username: user}
+        r = await collection.findOne(q)
+        if(r == null){
+            q = {ip: user}
+            r = await collection.findOne(q)
+            if(r == null){
+                return null
+            }
+        }
+
+        let tasks = await this.get_value(user, "tasks")
+        if(tasks == undefined){
+            tasks = {}
+        }
+
+        for(let task in tasks){
+            if(tasks[task].ETA != null && tasks[task].ETA <= this.unixTime()){
+                if(tasks[task].activity == "Upgrading"){
+                    await this.stop_task(user, tasks[task].origin)
+                    await this.upgrade_file(user, tasks[task].origin)
+                    await this.start_task(user, {origin: tasks[task].origin, activity: "Running"})
+                }
+            }
+        }
     },
 
     set_default_files: async function(user, file){
