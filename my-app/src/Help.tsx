@@ -2,7 +2,6 @@ import React from 'react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import * as mui from "@mui/material/"
-import { minHeight } from '@mui/system'
 
 class Block extends React.Component<{label: string, title: string, width: string, height: string}, {}>{
     render(){
