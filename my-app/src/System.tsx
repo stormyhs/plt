@@ -138,9 +138,10 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
 
                 <div style={{marginLeft: "10vw"}}>
                     <h2>Running tasks</h2>
-                    {this.state.tasks != undefined && this.state.tasks.length > 0?
-                    this.state.tasks.map((task: any) =>{
-                        return <Block label={task.origin} title={task.activity} ETA={Number(task.ETA)}/>
+                    {this.state.tasks != undefined?
+                    Object.keys(this.state.tasks).map((task: any, i: any) =>{
+                        console.log(task)
+                        return <Block label={this.state.tasks[task].origin} title={this.state.tasks[task].activity} ETA={Number(task.ETA)}/>
                     })
                     :
                     ""

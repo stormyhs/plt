@@ -385,29 +385,22 @@ module.exports = {
 
         let tasks = await this.get_value(user, "tasks")
         if(tasks == undefined){
-            tasks = []
+            tasks = {}
         }
 
         for(let task in tasks){
             if(tasks[task].ETA != null && tasks[task].ETA <= this.unixTime()){
                 if(tasks[task].activity == "Upgrading"){
-                    console.log("B stop_task")
                     await this.stop_task(user, tasks[task].origin)
-                    console.log("A stop_task")
-                    console.log("B upgrade_file")
                     await this.upgrade_file(user, tasks[task].origin)
-                    console.log("A upgrade_file")
-                    console.log("B start_task")
                     await this.start_task(user, {origin: tasks[task].origin, activity: "Running"})
-                    console.log("A start_task")
                 }
             }
         }
-
         return {type: "OK", tasks: tasks}
     },
 
-    start_task: async function(user, task){
+    start_task: async function(user, origin, activity){
         var client = await MongoClient.connect(url, { useNewUrlParser: true })
         db = client.db("projecth");
         collection = db.collection("users");
@@ -427,24 +420,19 @@ module.exports = {
             tasks = {}
         }
 
-        
+        console.log(`Tasks: ${tasks}`)
+        console.log(tasks)
         isRunning = false
-        if(tasks[task.origin] != undefined && tasks[task.origin].activity == task.activity){
+        if(tasks[origin] != undefined && tasks[origin].activity == activity){
             isRunning = true
         }
         if(isRunning){
             return {type: "ERROR", message: "Task already running."}
         }
 
-        // for(let runningTask in tasks){
-        //     if(tasks[runningTask].origin == task.origin && tasks[runningTask].activity == task.activity){
-        //         isRunning = true
-        //     }
-        // }
-
         originExists = false
         for(let file in files){
-            if(files[file].filename == task.origin){
+            if(files[file].filename == origin){
                 originExists = true
             }
         }
@@ -452,7 +440,10 @@ module.exports = {
             return {type: "ERROR", message: "Task origin does not exist.", origin: task}
         }
 
-        tasks.push(task)
+        tasks[origin] = {
+            origin: origin,
+            activity: activity
+        }
         await this.set_value(user, "tasks", tasks)
         return {type: "OK", tasks: tasks}
     },
@@ -472,19 +463,11 @@ module.exports = {
         }
 
         let tasks = await this.get_value(user, "tasks")
-        let newTasks = []
+        let newTasks = {}
         for(let item in tasks){
             if(tasks[item].origin != task){
-                newTasks.push(tasks[item])
+                newTasks[task] = tasks[item]
             }
-            // else{
-            //     if(tasks[item].ETA != null && tasks[item].ETA <= this.unixTime()){
-            //         if(tasks[item].activity == "Upgrading"){
-            //             await this.remove_file(tasks[item].origin)
-            //             await this.add_file
-            //         }
-            //     }
-            // }
         }
 
         await this.set_value(user, "tasks", newTasks)

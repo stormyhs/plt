@@ -289,13 +289,13 @@ app.post('/api/system', async function(req, res){
     }
 
     if(req.body.type == "start_task"){
-        let argStatus = checkArgs(req.body, ['task'])
+        let argStatus = checkArgs(req.body, ['activity', 'origin'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
-
-        res.end(JSON.stringify(await database.start_task(req.body.username, req.body.task)))
+        
+        res.end(JSON.stringify(await database.start_task(req.body.username, req.body.origin, req.body.activity)))
         return
     }
 

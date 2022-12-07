@@ -102,14 +102,14 @@ class File extends React.Component<{filename: string, content: string, size: any
   async startTask(name: string){
     let r = await Funcs.request('/api/system',
       {type: 'start_task',
-      task: {
-        name: {origin: name, activity: "Running"}
-      },
-      username: localStorage.getItem("username")})
+      origin: name,
+      activity: "Running",
+      username: localStorage.getItem("username")
+      })
       
     if(r.type === "OK"){
       let tasks = this.state.tasks
-      tasks.push({origin: name, activity: "Running"})
+      tasks[name] = {origin: name, activity: "Running"}
       this.setState({tasks: tasks})
     }
   }
@@ -118,22 +118,27 @@ class File extends React.Component<{filename: string, content: string, size: any
     let r = await Funcs.request('/api/system', {type: 'stop_task', task: name, username: localStorage.getItem("username")})
     if(r.type === "OK"){
       let tasks = this.state.tasks
-      let newTasks = []
+      let newTasks: any = {}
       for(let task in tasks){
         if(tasks[task].origin != name){
-          newTasks.push(tasks[task])
+          newTasks[task] = tasks[task]
         }
       }
       this.setState({tasks: newTasks})
-      console.log(newTasks)
     }
   }
 
   async startUpgrade(name: string){
-    let r = await Funcs.request('/api/upgrade', {type: 'start_upgrade', file: name, username: localStorage.getItem("username")})
+    let r = await Funcs.request('/api/system',
+      {type: 'start_task',
+      origin: name,
+      activity: "Upgrading",
+      username: localStorage.getItem("username")
+    })
+
     if(r.type === "OK"){
       let tasks = this.state.tasks
-      tasks.push({origin: name, activity: "Upgrading"})
+      tasks[name] = {origin: name, activity: "Upgrading"}
       this.setState({tasks: tasks})
     }
   }
@@ -147,26 +152,48 @@ class File extends React.Component<{filename: string, content: string, size: any
     }
     if(extention === "exe"){
       let isRunning = false
-      var isUpgrading = false
+      let isUpgrading = false
       
-      for(let task in this.state.tasks){
-        if(this.state.tasks[task].origin == this.state.name){
-          if(this.state.tasks[task].activity == "Running"){
-            isRunning = true
-            buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Running</mui.Button>)
-          } else
-          if(this.state.tasks[task].activity == "Upgrading"){
-            buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Upgrading</mui.Button>)
-            isUpgrading = false
-          }
+      console.log(this.state.tasks)
+      console.log(this.state.tasks[this.state.name])
+      if(this.state.tasks[this.state.name] != undefined){
+        if(this.state.tasks[this.state.name].activity === "Running"){
+          isRunning = true
+        }
+        if(this.state.tasks[this.state.name].activity === "Upgrading"){
+          isUpgrading = true
         }
       }
-      if(isRunning == false){
+
+      if(isRunning){
+        buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Running</mui.Button>)
+      } else{
         buttons.push(<mui.Button onClick={async (e) => await this.startTask(this.state.name)} size="small" color="primary">Run</mui.Button>)
       }
-      if(isUpgrading == false){
+      if(isUpgrading){
+        buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Upgrading</mui.Button>)
+      } else{
         buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} size="small" color="primary">Upgrade</mui.Button>)
       }
+
+      // for(let task in this.state.tasks){
+      //   if(this.state.tasks[task].origin == this.state.name){
+      //     if(this.state.tasks[task].activity == "Running"){
+      //       isRunning = true
+      //       buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Running</mui.Button>)
+      //     } else
+      //     if(this.state.tasks[task].activity == "Upgrading"){
+      //       buttons.push(<mui.Button onClick={async (e) => await this.stopTask(this.state.name)} size="small" color="primary">Upgrading</mui.Button>)
+      //       isUpgrading = false
+      //     }
+      //   }
+      // }
+      // if(isRunning == false){
+      //   buttons.push(<mui.Button onClick={async (e) => await this.startTask(this.state.name)} size="small" color="primary">Run</mui.Button>)
+      // }
+      // if(isUpgrading == false){
+      //   buttons.push(<mui.Button onClick={async (e) => await this.startUpgrade(this.state.name)} size="small" color="primary">Upgrade</mui.Button>)
+      // }
     }
 
     // if(this.state.name === "cracker.exe" || this.state.name === "hasher.exe"){
