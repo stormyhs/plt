@@ -6,6 +6,9 @@ import {styled} from "@mui/material/styles"
 import Funcs from './Funcs'
 import { Link } from "react-router-dom";
 
+import TextSnippetOutlinedIcon from '@mui/icons-material/TextSnippetOutlined';
+import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 
 const CssTextField = styled(mui.TextField)({
 textAlign: "center",
@@ -55,7 +58,7 @@ function RenameDialog(props: any) {
   );
 }
 
-class File extends React.Component<{filename: string, content: string}, {open: boolean, name: string}>{
+class File extends React.Component<{filename: string, content: string, size: any, version?: any, taskHandler: any, fileStatus: any}, {open: boolean, name: string}>{
   constructor(props: any){
     super(props)
     this.state = {name: props.filename, open: false}
@@ -84,6 +87,34 @@ class File extends React.Component<{filename: string, content: string}, {open: b
     console.log(`set name to ${newName}`)
   }
 
+  // TODO: use function props to pass the state from Storage
+  // instead of saving the same state on each File class
+
+  getButtons(){
+    let buttons = []
+    let extention = this.state.name.split(".")[this.state.name.split(".").length - 1]
+
+    if(extention === "ls"){
+      buttons.push(<mui.Button size="small" color="primary">Compile</mui.Button>)
+    }
+    if(extention === "exe"){
+      let status = this.props.fileStatus(this.state.name, "getStatus")
+      if(status.running){
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Running</mui.Button>)
+      } else{
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "start")} size="small" color="primary">Run</mui.Button>)
+      }
+      if(status.upgrading){
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Upgrading</mui.Button>)
+      } else{
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "upgrade")} size="small" color="primary">Upgrade</mui.Button>)
+      }
+    }
+
+    buttons.push(<mui.Button size="small" color="primary"onClick={this.delete.bind(this)}>Delete</mui.Button>)
+    return buttons
+  }
+
   render(){
     return(
         <>
@@ -91,31 +122,46 @@ class File extends React.Component<{filename: string, content: string}, {open: b
           <Link id={"link-" + this.props.filename} to={"/editor?filename=" + this.state.name}>
           <mui.CardActionArea>
             <mui.CardContent>
-              <mui.Typography id={"title-" + this.state.name} gutterBottom variant="h5" component="div">
+              <div style={{display: "flex", alignItems: "center"}}>
+              
+              {this.props.filename.split(".")[this.props.filename.split(".").length-1] == "txt"?
+              <TextSnippetOutlinedIcon/>
+              :""
+              }
+              
+              {this.props.filename.split(".")[this.props.filename.split(".").length-1] == "ls"?
+              <CodeOutlinedIcon/>
+              :""
+              }
+              
+              {this.props.filename.split(".")[this.props.filename.split(".").length-1] == "exe"?
+              <SettingsOutlinedIcon/>
+              :""
+              }
+
+              <mui.Typography gutterBottom variant="h5" component="div">
                 {this.state.name}
               </mui.Typography>
+              </div>
               <mui.Typography variant="body2" color="text.secondary">
-                {/*{this.props.content}*/}
-                {"2 MB - RUNNING"}
+                {this.props.version?
+                `${this.props.size} MB - V${this.props.version}`
+                :
+                `${this.props.size} MB - ${this.props.content.slice(0, 12) + "..."}`
+                }
+                
               </mui.Typography>
             </mui.CardContent>
           </mui.CardActionArea>
           </Link>
           <mui.CardActions>
-          {this.state.name.split(".")[this.state.name.split(".").length - 1] === "ls"
-          ?
-            <mui.Button size="small" color="primary">
-              Compile
-            </mui.Button>
-          :
-          ""}
-          {this.state.name.split(".")[this.state.name.split(".").length - 1] === "exe"
-          ?
-            <mui.Button size="small" color="primary">
-              Run
-            </mui.Button>
-          :
-          ""}
+
+          {this.getButtons().map((button: any) =>{
+            return button
+          })}
+
+          {this.state.name !== "cracker.exe" && this.state.name !== "hasher.exe"?
+          <>
             <mui.Button size="small" color="primary"
             onClick={this.handleClickOpen.bind(this)}
             >
@@ -127,27 +173,95 @@ class File extends React.Component<{filename: string, content: string}, {open: b
             old={this.state.name}
             rename={this.rename}
             />
+          </>
+          :
+          ""
+          }
 
-            <mui.Button size="small" color="primary"
-            onClick={this.delete.bind(this)}>
-              Delete
-            </mui.Button>
+
           </mui.CardActions>
         </mui.Card>
         </>
     )
-    }
+  }
 }
 
-class Storage extends React.Component<{}, {files: any}>{
+class Storage extends React.Component<{}, {files: any, tasks: any}>{
   constructor(props: any){
     super(props)
-    this.state = {files: []}
+    this.state = {files: [], tasks: []}
+    this.taskHandler = this.taskHandler.bind(this)
+    this.fileStatus = this.fileStatus.bind(this)
   }
 
   async componentDidMount(){
-    let r = await Funcs.request('/api/storage', {type: "get_files", username: localStorage.getItem("username")})
+    let r = await Funcs.request('/api/system', {type: "get_tasks", username: localStorage.getItem("username")})
+    this.setState({tasks: r.tasks})
+    r = await Funcs.request('/api/storage', {type: "get_files", username: localStorage.getItem("username")})
     this.setState({files: r})
+  }
+
+  async taskHandler(name: string, type: string){
+    if(type == "start"){
+      let r = await Funcs.request('/api/system',
+        {type: 'start_task',
+        origin: name,
+        activity: "Running",
+        username: localStorage.getItem("username")
+        })
+        
+      if(r.type === "OK"){
+        let tasks = this.state.tasks
+        tasks[name] = {origin: name, activity: "Running"}
+        this.setState({tasks: tasks})
+      }
+    }
+
+    if(type == "stop"){
+      let r = await Funcs.request('/api/system', {type: 'stop_task', task: name, username: localStorage.getItem("username")})
+      if(r.type === "OK"){
+        let tasks = this.state.tasks
+        let newTasks: any = {}
+        for(let task in tasks){
+          if(tasks[task].origin != name){
+            newTasks[task] = tasks[task]
+          }
+        }
+        this.setState({tasks: newTasks})
+      }
+    }
+
+    if(type == "upgrade"){
+      let r = await Funcs.request('/api/system',
+      {type: 'start_task',
+      origin: name,
+      activity: "Upgrading",
+      username: localStorage.getItem("username")
+      })
+
+      if(r.type === "OK"){
+        let tasks = this.state.tasks
+        tasks[name] = {origin: name, activity: "Upgrading"}
+        this.setState({tasks: tasks})
+      }
+    }
+  }
+
+  fileStatus(name: string){
+    let status = {
+      running: false,
+      upgrading: false
+    }
+
+    if(this.state.tasks[name] != undefined){
+      if(this.state.tasks[name].activity === "Running"){
+        status.running = true
+      }
+      if(this.state.tasks[name].activity === "Upgrading"){
+        status.upgrading = true
+      }
+    }
+    return status
   }
 
 	render(){
@@ -159,14 +273,21 @@ class Storage extends React.Component<{}, {files: any}>{
         <Topbar />
         <div style={{display: "flex"}}>
         <Sidebar />
-        
+
         <div style={{display: "grid", alignContent: "flex-start", gridTemplateColumns: "auto auto auto auto auto"}}>
 	        {
 	        this.state.files != null && this.state.files.length !== 0
 	        ?
 	        (<>
 	            {this.state.files.map((file: any) =>{
-	                return  <><File filename={file.filename} content={file.content}/></>
+	                return <><File
+                  filename={file.filename}
+                  content={file.content}
+                  size={file.size}
+                  version={file.version}
+                  taskHandler={this.taskHandler}
+                  fileStatus={this.fileStatus}
+                  /></>
 	            })}
 	        </>)
 	        :

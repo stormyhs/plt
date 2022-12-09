@@ -12,10 +12,12 @@ import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 
 class Sidebar extends React.Component{
-	render(){
+	
+  render(){
 	return(
 		<div>
 		<mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
@@ -94,6 +96,15 @@ class Sidebar extends React.Component{
           </mui.ListItemIcon>
           <mui.ListItemText>Help</mui.ListItemText>
 		</mui.MenuItem>
+    </Link>
+
+    <Link to='/settings'>
+    <mui.MenuItem>        
+          <mui.ListItemIcon>
+            <SettingsIcon/>
+          </mui.ListItemIcon>
+          <mui.ListItemText>Settings</mui.ListItemText>
+    </mui.MenuItem>
     </Link>
 
     <Link to='/logout'>
