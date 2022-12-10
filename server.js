@@ -155,7 +155,7 @@ app.post('/api/storage', async function(req, res){
         let file = {
             filename: req.body.file.filename,
             content: req.body.file.content,
-            size: 2
+            size: req.body.file.content.length / 10
         }
         let extention = req.body.file.filename.split(".")[req.body.file.filename.split(".").length - 1]
 
@@ -294,19 +294,48 @@ app.post('/api/system', async function(req, res){
             res.end(JSON.stringify(argStatus))
             return
         }
-        
+
+        if(['Upgrading', 'Running'].indexOf(req.body.activity) == -1){
+            res.end(JSON.stringify({type: "ERROR", message: "Invalid task activity."}))
+            return
+        }
+
+        let hardware = await database.get_hardware(req.body.username)
+        let file = await database.get_file(req.body.username, req.body.origin)
+
+        try{
+            if(hardware.cpu + (file.version * 2) > hardware.maxCpu){
+                res.end(JSON.stringify({type: "ERROR", message: "Not enough CPU power."}))
+                return
+            }
+            if(req.body.activity == "Upgrading"){
+                if(hardware.disk + (file.version * 2) > hardware.maxDisk){
+                    res.end(JSON.stringify({type: "ERROR", message: "Not enough disk space."}))
+                    return
+                }
+            }
+        } catch{
+            res.end(JSON.stringify({type: "ERROR", message: "Unknown error."}))
+            return
+        }
+
         res.end(JSON.stringify(await database.start_task(req.body.username, req.body.origin, req.body.activity)))
         return
     }
 
     if(req.body.type == "stop_task"){
-        let argStatus = checkArgs(req.body, ['task'])
+        let argStatus = checkArgs(req.body, ['activity', 'origin'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
-        res.end(JSON.stringify(await database.stop_task(req.body.username, req.body.task)))
+        if(['Upgrading', 'Running'].indexOf(req.body.activity) == -1){
+            res.end(JSON.stringify({type: "ERROR", message: "Invalid task activity."}))
+            return
+        }
+
+        res.end(JSON.stringify(await database.stop_task(req.body.username, req.body.origin, req.body.activity)))
         return
     }
 
