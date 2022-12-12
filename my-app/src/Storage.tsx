@@ -125,10 +125,12 @@ class File extends React.Component<{filename: string, content: string, size: any
     if(extention === "exe"){
       let status = this.props.fileStatus(this.state.name)
 
-      if(status.running){
-        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Running</mui.Button>)
-      } else{
-        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "start")} size="small" color="primary">Run</mui.Button>)
+      if(this.state.name == "hasher.exe"){
+        if(status.running){
+          buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Running</mui.Button>)
+        } else{
+          buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "start")} size="small" color="primary">Run</mui.Button>)
+        }
       }
       if(status.upgrading){
         buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop_upgrade")} size="small" color="primary">Upgrading</mui.Button>)

@@ -222,6 +222,13 @@ app.post('/api/ip', async function(req, res){
             res.end(JSON.stringify(argStatus))
             return
         }
+        
+        let ip = await database.get_value(req.body.username, "ip")
+        console.log(ip)
+        if([ip, "localhost", "127.0.0.1"].indexOf(req.body.ip) != -1){
+            res.end(JSON.stringify(await database.get_ip_data(ip)))
+            return
+        }
 
         res.end(JSON.stringify(await database.get_ip_data(req.body.ip)))
     }
@@ -293,6 +300,17 @@ app.post('/api/system', async function(req, res){
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
+        }
+
+        let extention = req.body.origin.split(".")[req.body.origin.split(".").length - 1]
+        if(extention != "exe"){
+            res.end(JSON.stringify({type: "ERROR", message: "Only EXE files can start tasks."}))
+            return            
+        }
+
+        if(req.body.origin == "cracker.exe"){
+            res.end(JSON.stringify({type: "ERROR", message: "This file cannot be manually started."}))
+            return            
         }
 
         if(['Upgrading', 'Running'].indexOf(req.body.activity) == -1){
