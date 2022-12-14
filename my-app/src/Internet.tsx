@@ -3,6 +3,7 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
 import * as mui from "@mui/material/"
+import { Link } from "react-router-dom";
 
 class Block extends React.Component<{label: string, title: string,}, {}>{
     render(){
@@ -102,10 +103,17 @@ readme:string,downloader:boolean,login:boolean}>
 	}
 
 	async crackPassword(){
+		// this is meant to be a cracker vs hasher thing
+		// for now it just logs you in unconditionally
 		this.setState({scanned: false})
 		this.setState({invalidInput: false})
-		this.setState({downloader: false})	
-		this.setState({login: true})	
+		this.setState({downloader: false})
+		this.setState({login: true})
+		localStorage.setItem("foreignip", (document.getElementById("connect") as HTMLInputElement).value)
+	}
+
+	disconnect(){
+		localStorage.removeItem("foreignip")
 	}
 
 	render(){
@@ -121,11 +129,21 @@ readme:string,downloader:boolean,login:boolean}>
 		<div style={{marginLeft:"20px", marginTop:"20px"}}>
 			<mui.Stack style={{marginTop: "10px"}} direction="row" spacing={1}>
 				<mui.Typography variant="h5" gutterBottom>
-					Your IP: {this.state.ip}
+					Your IP: {localStorage.getItem("foreignip") ? localStorage.getItem("foreignip") : this.state.ip}
 				</mui.Typography>
+
+				{localStorage.getItem("foreignip") ?
+				<Link to="/system">
+					<mui.Button onClick={this.disconnect.bind(this)} variant="outlined" color="error">
+					DISCONNECT
+					</mui.Button>
+				</Link>
+				:
 				<mui.Button variant="outlined" color="success">
 					Reset IP
 				</mui.Button>
+				}
+				
 			</mui.Stack>
 
 			<mui.Stack style={{marginTop: "25px"}} direction="row" spacing={1}>
@@ -136,10 +154,9 @@ readme:string,downloader:boolean,login:boolean}>
 			</mui.Stack>
 
 
-			{this.state.login?
-			<div style={{resize: "both", overflow: "auto"}}>
-				<h3>some shit in here</h3>
-				<iframe style={{height: "70vh", width: "70vw"}}src={`http://localhost:3000`}></iframe>
+			{localStorage.getItem("foreignip")?
+			<div>
+				<h3>Logged into {localStorage.getItem("foreignip")}</h3>
 			</div>
 			:
 			""}
