@@ -291,7 +291,16 @@ module.exports = {
 
         const date = new Date();
         creation_date = `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`
-        let data = {username: username, password: password, ip: this.generate_ip(), files: [{filename: "hasher.exe", content:"", version: 1.0}, {filename: "cracker.exe", content: "", version: 1.0}], logs: "", creation_date: creation_date}
+        let data = {
+            username: username,
+            password: password,
+            ip: this.generate_ip(),
+            files: [
+                {filename: "hasher.exe", size: 2, content:"", version: 1.0},
+                {filename: "cracker.exe", size: 2, content: "", version: 1.0}
+            ],
+            logs: "",
+            creation_date: creation_date}
 
         try{
             await collection.insertOne(data)
@@ -482,8 +491,10 @@ module.exports = {
         let newTasks = tasks
         
         if(activity == "ALL"){
-            delete tasks[origin]
-            await this.set_value(user, "tasks", tasks)
+            try{
+                delete tasks[origin]
+                await this.set_value(user, "tasks", tasks)
+            } catch{}
             return {type: "OK", tasks: tasks}
         }
         

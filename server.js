@@ -98,12 +98,17 @@ app.post('/api/user', async function(req, res){
         return
     }
 
+    let target = req.body.username
+    if(req.body.foreignip != null){
+        target = req.body.foreignip
+    }
+
     if(req.body.type == "get_user_info"){
         body = {
             type: "OK",
-            ip: await database.get_value(req.body.username, "ip"),
-            username: req.body.username,
-            creation_date: await database.get_value(req.body.username, "creation_date")
+            ip: await database.get_value(target, "ip"),
+            username: target,
+            creation_date: await database.get_value(target, "creation_date")
         }
         res.end(JSON.stringify(body))
     } else {
@@ -119,8 +124,18 @@ app.post('/api/storage', async function(req, res){
         return
     }
 
+    let target = req.body.username
+    if(req.body.foreignip != null){
+        target = req.body.foreignip
+    }
+    let ctx = {
+        username: req.body.username,
+        ip: await database.get_value(req.body.username, "ip"),
+        target: target,
+    }
+
     if(req.body.type == "get_files"){
-        res.end(JSON.stringify(await database.get_value(req.body.username, "files")))
+        res.end(JSON.stringify(await database.get_value(target, "files")))
     }
 
     else if(req.body.type == "remove_file"){
@@ -130,8 +145,13 @@ app.post('/api/storage', async function(req, res){
             return
         }
 
-        res.end(JSON.stringify(await database.remove_file(req.body.username, req.body.file)))
-        await database.add_log(req.body.username, `localhost removed file ${req.body.file}`)
+        res.end(JSON.stringify(await database.remove_file(target, req.body.file)))
+
+        if(target == req.body.username){
+            await database.add_log(target, `localhost removed file ${req.body.file}`)
+        } else{
+            await database.add_log(target, `${ctx.ip} removed file ${req.body.file}`)
+        }
     }
 
     else if(req.body.type == "rename_file"){
@@ -141,8 +161,13 @@ app.post('/api/storage', async function(req, res){
             return
         }
 
-        res.end(JSON.stringify(await database.rename_file(req.body.username, req.body.old, req.body.new)))
-        await database.add_log(req.body.username, `localhost renamed file ${req.body.old} to ${req.body.new}`)
+        res.end(JSON.stringify(await database.rename_file(target, req.body.old, req.body.new)))
+        if(target == req.body.username){
+            await database.add_log(target, `localhost renamed file ${req.body.old} to ${req.body.new}`)
+        } else{
+            await database.add_log(target, `${ctx.ip} renamed file ${req.body.old} to ${req.body.new}`)
+        }
+        
     }
 
     else if(req.body.type == "add_file"){
@@ -169,22 +194,27 @@ app.post('/api/storage', async function(req, res){
             return
         }
         
-        let body = await database.get_file(req.body.username, req.body.file.filename)
+        let body = await database.get_file(target, req.body.file.filename)
         if(body === null){
-            await database.add_log(req.body.username, `localhost created file ${req.body.file.filename}`)
-            let hardware = await database.get_hardware(req.body.username)
+            await database.add_log(target, `localhost created file ${req.body.file.filename}`)
+            let hardware = await database.get_hardware(target)
             if(hardware.disk + file.size > hardware.maxDisk){
                 res.end(JSON.stringify({type: "error", message: "Not enough disk space."}))
                 return
             }
         } else{
-            await database.add_log(req.body.username, `localhost edited file ${req.body.file.filename}`)
+            if(target == req.body.username){
+                await database.add_log(target, `localhost edited file ${req.body.file.filename}`)
+            } else{
+                await database.add_log(target, `${ctx.ip} edited file ${req.body.file.filename}`)
+            }
+            
         }
-        res.end(JSON.stringify(await database.add_file(req.body.username, file)))
+        res.end(JSON.stringify(await database.add_file(target, file)))
     }
 
     else if(req.body.type == "get_file"){
-        res.end(JSON.stringify(await database.get_file(req.body.username, req.body.file)))
+        res.end(JSON.stringify(await database.get_file(target, req.body.file)))
     }
 
     else{
@@ -200,8 +230,13 @@ app.post('/api/hardware', async function(req, res){
         return
     }
 
+    let target = req.body.username
+    if(req.body.foreignip != null){
+        target = req.body.foreignip
+    }
+
     if(req.body.type == "get_hardware"){
-        res.end(JSON.stringify(await database.get_hardware(req.body.username)))
+        res.end(JSON.stringify(await database.get_hardware(target)))
     }
 
     else{
@@ -216,10 +251,22 @@ app.post('/api/ip', async function(req, res){
         return
     }
 
+    let target = req.body.username
+    if(req.body.foreignip != null){
+        target = req.body.foreignip
+    }
+
     if(req.body.type == "get_ip_data"){
         let argStatus = checkArgs(req.body, ['ip'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
+            return
+        }
+        
+        let ip = await database.get_value(target, "ip")
+        console.log(ip)
+        if([ip, "localhost", "127.0.0.1"].indexOf(req.body.ip) != -1){
+            res.end(JSON.stringify(await database.get_ip_data(ip)))
             return
         }
 
@@ -237,8 +284,14 @@ app.post('/api/logs', async function(req, res){
         res.end(JSON.stringify({type: "relog"}))
         return
     }
+
+    let target = req.body.username
+    if(req.body.foreignip != null){
+        target = req.body.foreignip
+    }
+
     if(req.body.type == "get_logs"){
-        res.end(JSON.stringify(await database.get_value(req.body.username, "logs")))
+        res.end(JSON.stringify(await database.get_value(target, "logs")))
     }
     if(req.body.type == "set_logs"){
         let argStatus = checkArgs(req.body, ['logs'])
@@ -246,10 +299,10 @@ app.post('/api/logs', async function(req, res){
             res.end(JSON.stringify(argStatus))
             return
         }
-        res.end(JSON.stringify(await database.set_value(req.body.username, "logs", req.body.logs)))
+        res.end(JSON.stringify(await database.set_value(target, "logs", req.body.logs)))
     }
     if(req.body.type == "clear_logs"){
-        res.end(JSON.stringify(await database.set_value(req.body.username, "logs", [])))
+        res.end(JSON.stringify(await database.set_value(target, "logs", [])))
     }
 })
 
@@ -260,13 +313,18 @@ app.post('/api/defaults', async function(req, res){
         return
     }
 
+    let target = req.body.username
+    if(req.body.foreignip != null){
+        target = req.body.foreignip
+    }
+
     if(req.body.type == "get_cracker"){
-        res.end(JSON.stringify(await database.set_default_files(req.body.username, "cracker.exe")))
+        res.end(JSON.stringify(await database.set_default_files(target, "cracker.exe")))
         return
     }
 
     if(req.body.type == "get_hasher"){
-        res.end(JSON.stringify(await database.set_default_files(req.body.username, "hasher.exe")))
+        res.end(JSON.stringify(await database.set_default_files(target, "hasher.exe")))
         return
     }
 
@@ -283,8 +341,20 @@ app.post('/api/system', async function(req, res){
         return
     }
 
+    let target = req.body.username
+    if(req.body.foreignip != null){
+        target = req.body.foreignip
+    }
+    let ctx = {
+        username: req.body.username,
+        ip: await database.get_value(req.body.username, "ip"),
+        target: target,
+    }
+
+    let logStr = ""
+
     if(req.body.type == "get_tasks"){
-        res.end(JSON.stringify(await database.get_tasks(req.body.username, "tasks")))
+        res.end(JSON.stringify(await database.get_tasks(target, "tasks")))
         return
     }
 
@@ -295,13 +365,30 @@ app.post('/api/system', async function(req, res){
             return
         }
 
+        if(req.body.activity == "Running"){
+            logStr = "ran task"
+        } else if(req.body.activity == "Upgrading"){
+            logStr = "started upgrading"
+        }
+
+        let extention = req.body.origin.split(".")[req.body.origin.split(".").length - 1]
+        if(extention != "exe"){
+            res.end(JSON.stringify({type: "ERROR", message: "Only EXE files can start tasks."}))
+            return            
+        }
+
+        if(req.body.origin == "cracker.exe" && req.body.activity != "Upgrading"){
+            res.end(JSON.stringify({type: "ERROR", message: "This file cannot be manually started."}))
+            return            
+        }
+
         if(['Upgrading', 'Running'].indexOf(req.body.activity) == -1){
             res.end(JSON.stringify({type: "ERROR", message: "Invalid task activity."}))
             return
         }
 
-        let hardware = await database.get_hardware(req.body.username)
-        let file = await database.get_file(req.body.username, req.body.origin)
+        let hardware = await database.get_hardware(target)
+        let file = await database.get_file(target, req.body.origin)
 
         try{
             if(hardware.cpu + (file.version * 2) > hardware.maxCpu){
@@ -319,7 +406,13 @@ app.post('/api/system', async function(req, res){
             return
         }
 
-        res.end(JSON.stringify(await database.start_task(req.body.username, req.body.origin, req.body.activity)))
+        if(target == req.body.username){
+            await database.add_log(target, `localhost ${logStr} ${req.body.origin}`)
+        } else{
+            await database.add_log(target, `${ctx.ip} ${logStr} ${req.body.origin}`)
+        }
+
+        res.end(JSON.stringify(await database.start_task(target, req.body.origin, req.body.activity)))
         return
     }
 
@@ -330,36 +423,25 @@ app.post('/api/system', async function(req, res){
             return
         }
 
+        if(req.body.activity == "Running"){
+            logStr = "stopped task"
+        } else if(req.body.activity == "Upgrading"){
+            logStr = "stopped upgrading"
+        }
+
         if(['Upgrading', 'Running'].indexOf(req.body.activity) == -1){
             res.end(JSON.stringify({type: "ERROR", message: "Invalid task activity."}))
             return
         }
 
-        res.end(JSON.stringify(await database.stop_task(req.body.username, req.body.origin, req.body.activity)))
-        return
-    }
-
-    else{
-        res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
-    }
-
-})
-
-app.post('/api/upgrade', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({type: "relog"}))
-        return
-    }
-
-    if(req.body.type == "start_upgrade"){
-        let argStatus = checkArgs(req.body, ['file'])
-        if(argStatus.type != "OK"){
-            res.end(JSON.stringify(argStatus))
-            return
+        if(target == req.body.username){
+            await database.add_log(target, `localhost ${logStr} ${req.body.origin}`)
+        } else{
+            await database.add_log(target, `${ctx.ip} ${logStr} ${req.body.origin}`)
         }
-        let task = {origin: req.body.file, activity: "Upgrading", ETA: unixTime() + 60}
-        res.end(JSON.stringify(await database.start_task(req.body.username, task)))
+
+        res.end(JSON.stringify(await database.stop_task(target, req.body.origin, req.body.activity)))
+        return
     }
 
     else{
