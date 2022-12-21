@@ -78,6 +78,15 @@ class Sidebar extends React.Component{
         </mui.MenuItem>
       </Link>
 
+      <Link to='/Chat'>
+    	<mui.MenuItem>
+          <mui.ListItemIcon>
+          	<NoteAltOutlinedIcon/>
+          </mui.ListItemIcon>
+          <mui.ListItemText>Chat</mui.ListItemText>
+        </mui.MenuItem>
+      </Link>
+
         <mui.Divider/>
 
     <Link to='/profile'>

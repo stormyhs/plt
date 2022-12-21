@@ -1,8 +1,12 @@
 class Funcs{
     request = (async (endpoint: string, data: any) => {
-        // if(data.type != "login" && data.type != "register"){
-            // data.username = localStorage.getItem("username")
-        // }
+        if(data.username == null){
+            data.username = localStorage.getItem("username")
+        }
+        if(localStorage.getItem("foreignip") != null){
+            data.foreignip = localStorage.getItem("foreignip")
+        }
+
         let r = await fetch(`http://localhost:4444${endpoint}`, {
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(data),
@@ -20,6 +24,21 @@ class Funcs{
 
         return p
     })
+
+    getURLArgs = () =>{
+        if(window.location.href.split("?").length < 2){
+            return {}
+        }
+
+        let URLArgs = window.location.href.split("?")[1].split("&")
+        let args: any = {}
+        for(let arg in URLArgs){
+            let pair = URLArgs[arg].split("=")
+            args[pair[0]] = pair[1]
+        }
+
+        return args
+    }
 }
 
 const funcs = new Funcs()

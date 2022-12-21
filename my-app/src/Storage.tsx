@@ -58,6 +58,31 @@ function RenameDialog(props: any) {
   );
 }
 
+function PopUp(props: any) {
+  const { onClose, selectedValue, open, title, desc } = props;
+
+  const handleClose = () => {
+    onClose(selectedValue);
+  };
+
+  return (
+    <mui.Dialog onClose={handleClose} open={open}>
+      <div style={{marginLeft: "20px", marginRight: "20px"}}>
+      <mui.DialogTitle>
+        <mui.Typography variant="h5">
+          {props.title}
+        </mui.Typography>
+      </mui.DialogTitle>
+      <mui.DialogContent>
+        <mui.Typography variant="h6">
+          {props.desc}
+        </mui.Typography>
+      </mui.DialogContent>
+      </div>
+    </mui.Dialog>
+  );
+}
+
 class File extends React.Component<{filename: string, content: string, size: any, version?: any, taskHandler: any, fileStatus: any}, {open: boolean, name: string}>{
   constructor(props: any){
     super(props)
@@ -98,14 +123,17 @@ class File extends React.Component<{filename: string, content: string, size: any
       buttons.push(<mui.Button size="small" color="primary">Compile</mui.Button>)
     }
     if(extention === "exe"){
-      let status = this.props.fileStatus(this.state.name, "getStatus")
-      if(status.running){
-        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Running</mui.Button>)
-      } else{
-        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "start")} size="small" color="primary">Run</mui.Button>)
+      let status = this.props.fileStatus(this.state.name)
+
+      if(this.state.name == "hasher.exe"){
+        if(status.running){
+          buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Running</mui.Button>)
+        } else{
+          buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "start")} size="small" color="primary">Run</mui.Button>)
+        }
       }
       if(status.upgrading){
-        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Upgrading</mui.Button>)
+        buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop_upgrade")} size="small" color="primary">Upgrading</mui.Button>)
       } else{
         buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "upgrade")} size="small" color="primary">Upgrade</mui.Button>)
       }
@@ -186,10 +214,10 @@ class File extends React.Component<{filename: string, content: string, size: any
   }
 }
 
-class Storage extends React.Component<{}, {files: any, tasks: any}>{
+class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: boolean, popUpTitle: string, popUpDescription: string}>{
   constructor(props: any){
     super(props)
-    this.state = {files: [], tasks: []}
+    this.state = {files: [], tasks: {}, openPopUp: false, popUpTitle: "", popUpDescription: ""}
     this.taskHandler = this.taskHandler.bind(this)
     this.fileStatus = this.fileStatus.bind(this)
   }
@@ -211,23 +239,24 @@ class Storage extends React.Component<{}, {files: any, tasks: any}>{
         })
         
       if(r.type === "OK"){
-        let tasks = this.state.tasks
-        tasks[name] = {origin: name, activity: "Running"}
-        this.setState({tasks: tasks})
+        this.setState({tasks: r.tasks})
+      } else{
+        this.setState({openPopUp: true, popUpTitle: "ERROR", popUpDescription: r.message})
       }
     }
 
     if(type == "stop"){
-      let r = await Funcs.request('/api/system', {type: 'stop_task', task: name, username: localStorage.getItem("username")})
+      let r = await Funcs.request('/api/system',
+      {type: 'stop_task',
+      origin: name,
+      activity: "Running",
+      username: localStorage.getItem("username")
+      })
+
       if(r.type === "OK"){
-        let tasks = this.state.tasks
-        let newTasks: any = {}
-        for(let task in tasks){
-          if(tasks[task].origin != name){
-            newTasks[task] = tasks[task]
-          }
-        }
-        this.setState({tasks: newTasks})
+        this.setState({tasks: r.newTasks})
+      } else{
+        this.setState({openPopUp: true, popUpTitle: "ERROR", popUpDescription: r.message})
       }
     }
 
@@ -240,11 +269,27 @@ class Storage extends React.Component<{}, {files: any, tasks: any}>{
       })
 
       if(r.type === "OK"){
-        let tasks = this.state.tasks
-        tasks[name] = {origin: name, activity: "Upgrading"}
-        this.setState({tasks: tasks})
+        this.setState({tasks: r.tasks})
+      } else{
+        this.setState({openPopUp: true, popUpTitle: "ERROR", popUpDescription: r.message})
       }
     }
+
+    if(type == "stop_upgrade"){
+      let r = await Funcs.request('/api/system',
+      {type: 'stop_task',
+      origin: name,
+      activity: "Upgrading",
+      username: localStorage.getItem("username")
+      })
+
+      if(r.type === "OK"){
+        this.setState({tasks: r.newTasks})
+      } else{
+        this.setState({openPopUp: true, popUpTitle: "ERROR", popUpDescription: r.message})
+      }
+    }
+
   }
 
   fileStatus(name: string){
@@ -254,14 +299,19 @@ class Storage extends React.Component<{}, {files: any, tasks: any}>{
     }
 
     if(this.state.tasks[name] != undefined){
-      if(this.state.tasks[name].activity === "Running"){
+      console.log(this.state.tasks[name])
+      if(this.state.tasks[name].activities.indexOf("Running") != -1){
         status.running = true
       }
-      if(this.state.tasks[name].activity === "Upgrading"){
+      if(this.state.tasks[name].activities.indexOf("Upgrading") != -1){
         status.upgrading = true
       }
     }
     return status
+  }
+
+  handleClose(){
+    this.setState({openPopUp: false})
   }
 
 	render(){
@@ -273,6 +323,13 @@ class Storage extends React.Component<{}, {files: any, tasks: any}>{
         <Topbar />
         <div style={{display: "flex"}}>
         <Sidebar />
+        
+        <PopUp
+        open={this.state.openPopUp}
+        onClose={this.handleClose.bind(this)}
+        title={this.state.popUpTitle}
+        desc={this.state.popUpDescription}
+        />
 
         <div style={{display: "grid", alignContent: "flex-start", gridTemplateColumns: "auto auto auto auto auto"}}>
 	        {

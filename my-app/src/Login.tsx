@@ -87,44 +87,66 @@ export class Login extends React.Component<{}, FuckOff>{
     })
 
     return(
-        <div style={{marginTop: "15%", display: "flex", justifyContent: "center"}}>
-            <div>
-                <h1 style={{textAlign: "center"}}>{this.state.login ? "Log in" : "Sign up"}</h1>
-                <CssTextField autoFocus={true} id="username" variant="outlined" label="Username" InputProps={{style: {color: "white"}}}></CssTextField><br/><br/>
-                <CssTextField id="password" type='password' onKeyDown={this.onKeyDown.bind(this)} variant="outlined" label="Password" InputProps={{style: {color: "white"}}}></CssTextField>
-                <mui.Box textAlign="center" style={{marginTop: "15px"}}>
-                    <LoginButton id="send" variant={this.state.error ? "contained" : "outlined"} color='error' onClick={this.handleClick.bind(this)}>{this.state.login ? "Log in" : "Sign up"}</LoginButton>
-                </mui.Box>
-                <h3 id="switch-mode" className='clickable' style={{textAlign: "center"}} onClick={this.changeMode.bind(this)}>{this.state.login ? "Don't have an account?" : "Already have an account?"}</h3>
-            </div>
-            <div style={{marginLeft: "200px", textAlign: "left"}}>
-                <h1> News </h1>
-                {
-                this.state.news != null && this.state.news.length != 0
-                ?
-                (<div>
+        <div>
+        <mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
+            <div style={{marginTop: "30vh", display: "flex", justifyContent: "center"}}>
+                <mui.Paper elevation={3}>
+                <mui.Box style={{padding: "25px"}}>
+                    <h1 style={{display: "flex", justifyContent: "center"}}>{this.state.login ? "Log in" : "Sign up"}</h1>
                     
-                    {this.state.news.map((news: any) =>{
-                        return <h2>{news}</h2>
-                    })}
-                </div>)
-                :
-                <h2>No news.</h2>
-                }
+                    <CssTextField style={{display: "flex", justifyContent: "center"}} autoFocus={true} id="username" variant="outlined" label="Username" InputProps={{style: {color: "white"}}}></CssTextField>
+                    <br/>
+                    <CssTextField style={{display: "flex", justifyContent: "center"}} id="password" type='password' onKeyDown={this.onKeyDown.bind(this)} variant="outlined" label="Password" InputProps={{style: {color: "white"}}}></CssTextField>
+                    
+                    <div style={{display: "flex", justifyContent: "center"}}>
+                    <LoginButton
+                        style={{marginTop: "20px"}}
+                        id="send"
+                        variant={this.state.error ? "contained" : "outlined"}
+                        color='error'
+                        onClick={this.handleClick.bind(this)}>{this.state.login ? "Log in" : "Sign up"}
+                    </LoginButton>
+                    </div>
+                    
+                    <h3 id="switch-mode" className='clickable' style={{textAlign: "center"}} onClick={this.changeMode.bind(this)}>{this.state.login ? "Don't have an account?" : "Already have an account?"}</h3>
+                </mui.Box>
+                </mui.Paper>
+            
+                <div style={{marginLeft: "10vw"}}>
+                <mui.Paper elevation={3}>
+                <mui.Box style={{padding: "25px"}}>
+                    <h1> News </h1>
+                    {
+                    this.state.news != null && this.state.news.length != 0
+                    ?
+                    (<div>
+                        
+                        {this.state.news.map((news: any) =>{
+                            return <h2>{news}</h2>
+                        })}
+                    </div>)
+                    :
+                    <h2>No news.</h2>
+                    }
 
-                {
-                this.state.status != null && this.state.status.length != 0
-                ?
-                (<div>
-                    <h1> Status </h1>
-                    {this.state.status.map((status: any) =>{
-                        return <div><mui.Alert severity={status.severity} variant='filled'>{status.message}</mui.Alert><br/></div>
-                    })}
-                </div>)
-                :
-                ""
-                }
+                    {
+                    this.state.status != null && this.state.status.length != 0
+                    ?
+                    (<div>
+                        <h1> Status </h1>
+                        {this.state.status.map((status: any) =>{
+                            return <div><mui.Alert severity={status.severity} variant='filled'>{status.message}</mui.Alert><br/></div>
+                        })}
+                    </div>)
+                    :
+                    ""
+                    }
+                </mui.Box>
+                </mui.Paper>
+                </div>
+
             </div>
+        </mui.ThemeProvider>
         </div>
     )
   }

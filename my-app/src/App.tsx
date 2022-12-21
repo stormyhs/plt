@@ -10,6 +10,7 @@ import Profile from './Profile'
 import Help from './Help'
 import Logout from './Logout'
 import Settings from './Settings'
+import Chat from './Chat'
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -28,6 +29,7 @@ class App extends React.Component{
               <Route path="network" element={<Network />} />
               <Route path="internet" element={<Internet />} />
               <Route path="logs" element={<Logs />} />
+              <Route path="chat" element={<Chat />} />
               <Route path="profile" element={<Profile />} />
               <Route path="help" element={<Help />} />
               <Route path="logout" element={<Logout />} />

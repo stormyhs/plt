@@ -36,7 +36,7 @@ class Block extends React.Component<{label: string, title: string, ETA?: number}
         if(this.props.ETA != undefined){
             let time = Math.round((new Date()).getTime() / 1000)
             if(this.props.ETA <= time){
-                this.setState({ETA: "ETA: Done - Restart EXE"})
+                this.setState({ETA: "ETA: Done"})
             } else{
                 let timeLeft = this.props.ETA - Math.round((new Date()).getTime() / 1000);
                 this.setState({ETA: `ETA: ${secsToTime(timeLeft)}`})
@@ -55,7 +55,7 @@ class Block extends React.Component<{label: string, title: string, ETA?: number}
             this.setState({ETA: `ETA: ${secsToTime(timeLeft)}`})
             await sleep(1000)
         }
-        this.setState({ETA: "ETA: Done - Restart EXE"})
+        this.setState({ETA: "ETA: Done"})
       }
 
     render(){
@@ -108,6 +108,10 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
         console.log(r.cpu)
     }
 
+    activitiesToString(task: any){
+        return task.activities.join(", ")
+    }
+
     render(){
         return(
             <div>
@@ -125,14 +129,14 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
                     <MemoryOutlinedIcon/>
                     <mui.Typography variant="h5" color="text.primary" style={{marginRight: "10px"}}>{'CPU'}</mui.Typography>
                     <mui.LinearProgress variant="determinate" value={(this.state.hardware.cpu / this.state.hardware.maxCpu) * 100} style={{width: "20vw"}} />
-                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.cpu / this.state.hardware.maxCpu) * 100}% (${this.state.hardware.cpu} / ${this.state.hardware.maxCpu})`}</mui.Typography>
+                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${Math.floor((this.state.hardware.cpu / this.state.hardware.maxCpu) * 100)}% (${this.state.hardware.cpu} / ${this.state.hardware.maxCpu})`}</mui.Typography>
                 </mui.Box>
                 <br/>
                 <mui.Box style={{display: "flex", "alignItems": "center"}}>
                     <StorageOutlinedIcon/>
                     <mui.Typography variant="h5" color="text.primary" style={{marginRight: "10px"}}>{'HDD'}</mui.Typography>
                     <mui.LinearProgress variant="determinate" value={(this.state.hardware.disk / this.state.hardware.maxDisk) * 100} style={{width: "20vw"}} />
-                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${(this.state.hardware.disk / this.state.hardware.maxDisk) * 100}% (${this.state.hardware.disk} / ${this.state.hardware.maxDisk})`}</mui.Typography>
+                    <mui.Typography variant="body2" color="text.secondary" style={{marginLeft: "10px"}}>{`${Math.floor((this.state.hardware.disk / this.state.hardware.maxDisk) * 100)}% (${this.state.hardware.disk} / ${this.state.hardware.maxDisk})`}</mui.Typography>
                 </mui.Box>
                 </div>
 
@@ -140,7 +144,8 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
                     <h2>Running Tasks</h2>
                     {this.state.tasks != undefined?
                     Object.keys(this.state.tasks).map((task: any) =>{
-                        return <Block label={this.state.tasks[task].origin} title={this.state.tasks[task].activity} ETA={Number(this.state.tasks[task].ETA)}/>
+                        console.log(this.state.tasks)
+                        return <Block label={this.state.tasks[task].origin} title={this.activitiesToString(this.state.tasks[task])} ETA={Number(this.state.tasks[task].ETA)}/>
                     })
                     :
                     ""
