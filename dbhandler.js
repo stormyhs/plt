@@ -306,7 +306,7 @@ module.exports = {
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
         const collection = db.collection('users');
-        let query = {username: user};
+        let query = {username: ip};
         let result = await collection.findOne(query);
         
         if(result == null){

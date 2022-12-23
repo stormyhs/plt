@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import * as mui from "@mui/material/"
 import './App.css'
 
+import CommentOutlinedIcon from '@mui/icons-material/CommentOutlined';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import CloudOutlinedIcon from '@mui/icons-material/CloudOutlined';
 import LanOutlinedIcon from '@mui/icons-material/LanOutlined';
@@ -81,7 +82,7 @@ class Sidebar extends React.Component{
       <Link to='/Chat'>
     	<mui.MenuItem>
           <mui.ListItemIcon>
-          	<NoteAltOutlinedIcon/>
+          	<CommentOutlinedIcon/>
           </mui.ListItemIcon>
           <mui.ListItemText>Chat</mui.ListItemText>
         </mui.MenuItem>
