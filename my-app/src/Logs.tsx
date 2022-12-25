@@ -34,7 +34,7 @@ class Logs extends React.Component{
         let logs = (document.getElementById("logs") as HTMLTextAreaElement);
         let payload = {type: "clear_logs", username: localStorage.getItem("username")}
         await Funcs.request('/api/logs', payload)
-        logs.value = "*"
+        logs.value = ""
     }
 
 	render(){

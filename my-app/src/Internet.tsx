@@ -5,7 +5,20 @@ import Funcs from './Funcs'
 import * as mui from "@mui/material/"
 import { Link } from "react-router-dom";
 
-class Block extends React.Component<{label: string, title: string,}, {}>{
+// TODO / Plans
+
+// There should be pre-defined websites a player can go to
+// One of them should be there to get you on your feet,
+// others can be banks, hardware stores, etc etc.
+// The data for these sites should probably not be stored
+// here on the front-end.
+
+// IP scans should provide more data, though this needs to
+// be planned out further.
+
+// IP resets should be available to the player, at a price / cooldown.
+
+class Readme extends React.Component<{label: string, title: string,}, {}>{
     render(){
     return(
         <mui.Box
@@ -34,20 +47,22 @@ class Block extends React.Component<{label: string, title: string,}, {}>{
     )}
 }
 
-class Internet extends React.Component<{},
-{ip:string, scanned:boolean,userInput:string,invalidInput:boolean,
-readme:string,downloader:boolean,login:boolean}>
-{
+class IPScan extends React.Component<{}, {}>{
+
+}
+
+class Internet extends React.Component<{}, {ip: string, userInput: string, readme: string, currentPage: string}>{
 	constructor(props: any){
 		super(props)
 		this.state = {
 			ip:"",
 			userInput:"",
 			readme:"",
-			downloader:false,
-			scanned:false,
-			invalidInput:false,
-			login:false
+			currentPage: "default",
+			// downloader:false,
+			// scanned:false,
+			// invalidInput:false,
+			// login:false
 		}
 	}
 
@@ -74,41 +89,31 @@ readme:string,downloader:boolean,login:boolean}>
 
 	async handleClick(){
 		let userInput = (document.getElementById("connect") as HTMLInputElement).value
-		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
 
-		if (r.type == "OK"){
-			this.setState({scanned: true})
-			this.setState({invalidInput: false})
-			this.setState({downloader: false})
+		if(userInput == "hackeracademy.com"){
+			this.setState({currentPage: "downloader"})
+			return
+		}
+
+		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput})
+		if(r.type == "OK"){
+			this.setState({currentPage: "scanned"})
 
 			let userInput = (document.getElementById("connect") as HTMLInputElement).value
 			let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
-			if (this.state.downloader !== true){
-				if(r.readme == null){
-					this.setState({readme:""})
-				} else{
-					this.setState({readme:r.readme.content})
-				}
+			if(r.readme != null){
+				this.setState({readme:r.readme.content})
 			}
 
-		} else if(userInput == "hackeracademy.com") {
-			this.setState({scanned: false})
-			this.setState({invalidInput: false})
-			this.setState({downloader: true})
 		} else {
-			this.setState({scanned: false})
-			this.setState({invalidInput: true})
-			this.setState({downloader: false})
+			this.setState({currentPage: "invalidInput"})
 		}
 	}
 
 	async crackPassword(){
 		// this is meant to be a cracker vs hasher thing
 		// for now it just logs you in unconditionally
-		this.setState({scanned: false})
-		this.setState({invalidInput: false})
-		this.setState({downloader: false})
-		this.setState({login: true})
+		this.setState({currentPage: "login"})
 		localStorage.setItem("foreignip", (document.getElementById("connect") as HTMLInputElement).value)
 	}
 
@@ -161,16 +166,14 @@ readme:string,downloader:boolean,login:boolean}>
 			:
 			""}
 
-			{this.state.scanned?
+			{this.state.currentPage == "scanned"?
 			<div>
 				<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px", display: 'inline-block'}}>
 					<mui.Stack style={{paddingLeft: "10px", paddingRight: "10px"}} direction="column" spacing={2}>
 						<h3 style={{textAlign: "center", marginBottom: "0px"}}>{(document.getElementById("connect") as HTMLInputElement).value} is online.</h3>
 						<div>
 						<mui.TextField type="password" label="Password" defaultValue="" size='small'/>
-						<mui.Button variant="outlined" color="success"
-							// style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}
-							>
+						<mui.Button variant="outlined" color="success">
 							Log in
 						</mui.Button>
 						</div>
@@ -182,17 +185,22 @@ readme:string,downloader:boolean,login:boolean}>
 
 					</mui.Stack>
 				</div>
+
+				{this.state.readme != "" ?
 				<div style={{marginTop: "20px"}}>
 					<mui.Box>
-						<Block label="README.txt" title={this.state.readme}/>
+						<Readme label="README.txt" title={this.state.readme}/>
 					</mui.Box>
 				</div>
+				:""
+				}
+
 			</div>
 			:
 			""
 			}
 
-			{this.state.invalidInput?
+			{this.state.currentPage == "invalidInput"?
 			<div style={{marginTop: "10px"}}>
 				<mui.Typography variant="h5" gutterBottom>
 					Connection failed.
@@ -202,7 +210,7 @@ readme:string,downloader:boolean,login:boolean}>
 			""
 			}
 
-			{this.state.downloader?
+			{this.state.currentPage == "downloader"?
 			<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px",}}>
 				<mui.Box sx={{ width: '100%', maxWidth: 800}}>
 				<br/>
