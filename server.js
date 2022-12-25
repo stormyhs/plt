@@ -264,13 +264,56 @@ app.post('/api/ip', async function(req, res){
         }
         
         let ip = await database.get_value(target, "ip")
-        console.log(ip)
         if([ip, "localhost", "127.0.0.1"].indexOf(req.body.ip) != -1){
             res.end(JSON.stringify(await database.get_ip_data(ip)))
             return
         }
 
         res.end(JSON.stringify(await database.get_ip_data(req.body.ip)))
+    }
+
+    if(req.body.type == "crack_password"){
+        let argStatus = checkArgs(req.body, ['ip'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+        
+        let hasher = await database.get_file(target, "hasher.exe")
+        let cracker = await database.get_file(req.body.username, "cracker.exe")
+
+        if(hasher == null){
+            hasher = {version: 0}
+        }
+        if(cracker == null){
+            res.end(JSON.stringify({type: "ERROR", message: "cracker.exe not found"}))
+            return
+        }
+        
+        let tasks = await database.get_tasks(req.body.username)
+        tasks = tasks['tasks']
+        if("cracker.exe" in tasks){
+            for(let activity in tasks['cracker.exe'].activities){
+                activity = tasks['cracker.exe'].activities[activity]
+                if(activity.startsWith("Cracking")){
+                    res.end(JSON.stringify({type: "ERROR", message: "cracker.exe is already cracking a hash"}))
+                    return
+                }
+            }
+        }
+
+        if(cracker.version > hasher.version){
+            let hardware = await database.get_hardware(req.body.username)
+            if(hardware.cpu + (cracker.version * 2) > hardware.maxCpu){
+                res.end(JSON.stringify({type: "ERROR", message: "Not enough CPU power."}))
+                return
+            }
+            
+            let ETA = unixTime() + 60 + (60 * (cracker.version - hasher.version))
+            res.end(JSON.stringify(await database.start_task(target, "cracker.exe", `Cracking ${req.body.ip}`, ETA)))
+        }
+
+        res.end(JSON.stringify({type: "ERROR", message: "cracker.exe is not powerful enough"}))
     }
 
     else{
@@ -423,13 +466,13 @@ app.post('/api/system', async function(req, res){
             return
         }
 
-        if(req.body.activity == "Running"){
+        if(req.body.activity == "Running" || req.body.activity == "ALL"){
             logStr = "stopped task"
         } else if(req.body.activity == "Upgrading"){
             logStr = "stopped upgrading"
         }
 
-        if(['Upgrading', 'Running'].indexOf(req.body.activity) == -1){
+        if(['Upgrading', 'Running', 'ALL'].indexOf(req.body.activity) == -1){
             res.end(JSON.stringify({type: "ERROR", message: "Invalid task activity."}))
             return
         }
