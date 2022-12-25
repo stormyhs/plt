@@ -140,8 +140,7 @@ module.exports = {
                 files: files
             }
         }
-        r = await collection.updateOne(query, data)
-        // client.close()
+        await collection.updateOne(query, data)
         return {type: "OK"}
     },
 
@@ -187,10 +186,10 @@ module.exports = {
             }
         }
 
-        const new_files = r.files.filter(element => element.filename != file);
+        const new_files = result.files.filter(element => element.filename != file);
         
         const data = {$set: {files: new_files}};
-        await collection.updateOne(q, data);
+        await collection.updateOne(query, data);
 
         const extention = file.split('.')[file.split('.').length-1];
         if(extention == 'exe'){
@@ -205,7 +204,7 @@ module.exports = {
         const db = client.db('projecth');
         const collection = db.collection('users');
         let query = {username: user};
-        let result = await collection.findOne(q);
+        let result = await collection.findOne(query);
         
         if(result == null){
             query = {ip: user};
@@ -215,7 +214,7 @@ module.exports = {
             }
         }
       
-        const new_files = r.files.map(file => {
+        const new_files = result.files.map(file => {
           if (file.filename === oldName) {
             return { ...file, filename: newName };
           }
@@ -223,7 +222,7 @@ module.exports = {
         });
       
         const data = { $set: { files: new_files } };
-        await collection.updateOne(q, data);
+        await collection.updateOne(query, data);
       
         return { type: 'OK' };
     },
@@ -306,16 +305,16 @@ module.exports = {
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
         const collection = db.collection('users');
-        let query = {username: user};
+        let query = {ip: ip};
         let result = await collection.findOne(query);
         
         if(result == null){
             return {type: "ERROR", message: "Could not connect to IP"}
         }
-    
+
         return {
             type: "OK",
-            readme: await this.get_file(ip, "README.txt")
+            readme: await this.get_file(ip, "README.txt"),
         }
     },
 
@@ -399,7 +398,7 @@ module.exports = {
         return {type: "OK", tasks: tasks}
     },
 
-    start_task: async function(user, origin, activity){
+    start_task: async function(user, origin, activity, ETA=null){
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
         const collection = db.collection('users');
@@ -446,7 +445,7 @@ module.exports = {
             tasks[origin].activities = newActivities
         }
         
-        ETA = tasks[origin].ETA
+        tasks[origin].ETA = ETA
         if(activity == "Upgrading"){
             let file = await this.get_file(user, origin)
             tasks[origin].ETA = this.unixTime() + (file.version * (15 * 60))
