@@ -87,16 +87,16 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 	}
 
 	async componentDidMount(){
-		let r = await Funcs.request('/api/user', {type: "get_user_info", username: localStorage.getItem("username")})
+		let r = await Funcs.request('/v2/user', {type: "get_user_info"})
 		this.setState({ip:r.ip})
 	}
 
 	async download(e: any){
 		if(e.target.id == "cracker"){
-			let r1 = await Funcs.request('/api/defaults', {type: "get_cracker", username: localStorage.getItem("username")})
+			let r1 = await Funcs.request('/v2/defaults', {type: "get_cracker"})
 		}
 		if(e.target.id == "hasher"){
-			let r2 = await Funcs.request('/api/defaults', {type: "get_hasher", username: localStorage.getItem("username")})
+			let r2 = await Funcs.request('/v2/defaults', {type: "get_hasher"})
 		}
 		console.log(e.target.id)
 	}
@@ -115,12 +115,12 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 			return
 		}
 
-		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput})
+		let r = await Funcs.request('/v2/ip', {type: "get_ip_data", scan_ip:userInput})
 		if(r.type == "OK"){
 			this.setState({currentPage: "scanned"})
 
 			let userInput = (document.getElementById("connect") as HTMLInputElement).value
-			let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
+			let r = await Funcs.request('/v2/ip', {type: "get_ip_data", scan_ip:userInput})
 			if(r.readme != null){
 				this.setState({readme:r.readme.content})
 			}
@@ -132,7 +132,7 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 
 	async crackPassword(){
 		let ip = (document.getElementById("connect") as HTMLInputElement).value
-		let r = await Funcs.request('/api/ip', {type: "crack_password", ip: ip})
+		let r = await Funcs.request('/v2/ip', {type: "crack_password", crack_ip: ip})
 		this.setState({openPopUp: true, popUpTitle: r.type, popUpDescription: r.message ? r.message : "Task started"})
 	}
 
