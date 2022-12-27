@@ -47,11 +47,32 @@ class Readme extends React.Component<{label: string, title: string,}, {}>{
     )}
 }
 
-class IPScan extends React.Component<{}, {}>{
+function PopUp(props: any) {
+	const { onClose, selectedValue, open, title, desc } = props;
+  
+	const handleClose = () => {
+	  onClose(selectedValue);
+	};
+  
+	return (
+	  <mui.Dialog onClose={handleClose} open={open}>
+		<div style={{marginLeft: "20px", marginRight: "20px"}}>
+		<mui.DialogTitle>
+		  <mui.Typography variant="h5">
+			{props.title}
+		  </mui.Typography>
+		</mui.DialogTitle>
+		<mui.DialogContent>
+		  <mui.Typography variant="h6">
+			{props.desc}
+		  </mui.Typography>
+		</mui.DialogContent>
+		</div>
+	  </mui.Dialog>
+	);
+  }
 
-}
-
-class Internet extends React.Component<{}, {ip: string, userInput: string, readme: string, currentPage: string}>{
+class Internet extends React.Component<{}, {ip: string, userInput: string, readme: string, currentPage: string, openPopUp: boolean, popUpTitle: string, popUpDescription: string}>{
 	constructor(props: any){
 		super(props)
 		this.state = {
@@ -59,24 +80,23 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 			userInput:"",
 			readme:"",
 			currentPage: "default",
-			// downloader:false,
-			// scanned:false,
-			// invalidInput:false,
-			// login:false
+			openPopUp: false,
+			popUpTitle: "",
+			popUpDescription: ""
 		}
 	}
 
 	async componentDidMount(){
-		let r = await Funcs.request('/api/user', {type: "get_user_info", username: localStorage.getItem("username")})
+		let r = await Funcs.request('/v2/user', {type: "get_user_info"})
 		this.setState({ip:r.ip})
 	}
 
 	async download(e: any){
 		if(e.target.id == "cracker"){
-			let r1 = await Funcs.request('/api/defaults', {type: "get_cracker", username: localStorage.getItem("username")})
+			let r1 = await Funcs.request('/v2/defaults', {type: "get_cracker"})
 		}
 		if(e.target.id == "hasher"){
-			let r2 = await Funcs.request('/api/defaults', {type: "get_hasher", username: localStorage.getItem("username")})
+			let r2 = await Funcs.request('/v2/defaults', {type: "get_hasher"})
 		}
 		console.log(e.target.id)
 	}
@@ -95,12 +115,12 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 			return
 		}
 
-		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput})
+		let r = await Funcs.request('/v2/ip', {type: "get_ip_data", scan_ip:userInput})
 		if(r.type == "OK"){
 			this.setState({currentPage: "scanned"})
 
 			let userInput = (document.getElementById("connect") as HTMLInputElement).value
-			let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
+			let r = await Funcs.request('/v2/ip', {type: "get_ip_data", scan_ip:userInput})
 			if(r.readme != null){
 				this.setState({readme:r.readme.content})
 			}
@@ -111,10 +131,13 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 	}
 
 	async crackPassword(){
-		// this is meant to be a cracker vs hasher thing
-		// for now it just logs you in unconditionally
-		this.setState({currentPage: "login"})
-		localStorage.setItem("foreignip", (document.getElementById("connect") as HTMLInputElement).value)
+		let ip = (document.getElementById("connect") as HTMLInputElement).value
+		let r = await Funcs.request('/v2/ip', {type: "crack_password", crack_ip: ip})
+		this.setState({openPopUp: true, popUpTitle: r.type, popUpDescription: r.message ? r.message : "Task started"})
+	}
+
+	handleClose(){
+		this.setState({openPopUp: false})
 	}
 
 	disconnect(){
@@ -130,6 +153,12 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 		<Topbar />
 		<div style={{display: "flex"}}>
 		<Sidebar />
+		<PopUp
+		open={this.state.openPopUp}
+		onClose={this.handleClose.bind(this)}
+		title={this.state.popUpTitle}
+		desc={this.state.popUpDescription}
+		/>
 
 		<div style={{marginLeft:"20px", marginTop:"20px"}}>
 			<mui.Stack style={{marginTop: "10px"}} direction="row" spacing={1}>
@@ -182,7 +211,6 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 						onClick={this.crackPassword.bind(this)}>
 							Crack Password
 						</mui.Button>
-
 					</mui.Stack>
 				</div>
 

@@ -77,7 +77,7 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
             params = params.split("&")
             let filename = params[0].split("=")[1].replace("%20", " ")
 
-            let r = await Funcs.request('/api/storage', {type: "get_file", file: filename, username: localStorage.getItem("username")})
+            let r = await Funcs.request('/v2/storage', {type: "get_file", file: filename, username: localStorage.getItem("username")})
             this.setState({filename: r.filename, content: r.content});
             (document.getElementById("filename") as HTMLInputElement).value = r.filename;
             (document.getElementById("content") as HTMLTextAreaElement).value = r.content;
@@ -89,7 +89,7 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
         let content = (document.getElementById("content") as HTMLTextAreaElement).value;
         
         let payload = {type: "add_file", file: {filename: filename, content: content}, username: localStorage.getItem("username")}    
-        let r = await Funcs.request('/api/storage', payload)
+        let r = await Funcs.request('/v2/storage', payload)
         if(r.type !== "OK"){
             this.setState({error: true})
         }

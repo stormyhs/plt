@@ -18,6 +18,26 @@ module.exports = {
         return ipParts.join('.');
     },
 
+    get_user: async function(user){
+        const client = await MongoClient.connect(url, { useNewUrlParser: true });
+        const db = client.db('projecth');
+        const collection = db.collection('users');
+        let query = { username: user };
+        let result = await collection.findOne(query);
+
+        if(result == null){
+            query = {ip: user}
+            result = await collection.findOne(query)
+            if(result == null){
+                return null
+            }
+        }
+
+        await this.check_upgrade_tasks(user)
+
+        return result
+    },
+
     get_value: async function(user, key){
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
@@ -176,7 +196,7 @@ module.exports = {
         const db = client.db('projecth');
         const collection = db.collection('users');
         let query = {username: user};
-        let result = await collection.findOne(q);
+        let result = await collection.findOne(query);
         
         if(result == null){
             query = {ip: user};
@@ -387,14 +407,11 @@ module.exports = {
             }
         }
 
-        await this.check_upgrade_tasks(user)
-
         let tasks = await this.get_value(user, "tasks")
         if(tasks == undefined){
             tasks = {}
         }
         
-        // client.close()
         return {type: "OK", tasks: tasks}
     },
 

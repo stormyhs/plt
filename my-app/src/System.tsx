@@ -102,18 +102,12 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
     }
 
     async componentDidMount(){
-        let payload = {
-            username: localStorage.getItem("username"),
-            type: "get_hardware"
-        }
-        let r = await Funcs.request('/api/hardware', payload)
+        let payload = {type: "get_hardware"}
+        let r = await Funcs.request('/v2/hardware', payload)
         this.setState({hardware: r})
 
-        payload = {
-            username: localStorage.getItem("username"),
-            type: "get_tasks"
-        }
-        r = await Funcs.request('/api/system', payload)
+        payload = {type: "get_tasks"}
+        r = await Funcs.request('/v2/system', payload)
         this.setState({tasks: r.tasks})
     }
 

@@ -16,11 +16,8 @@ class Profile extends React.Component<{}, {creation_date: string, ip: any}>{
 	}
 
 	async componentDidMount(){
-		let payload = {
-			username: localStorage.getItem("username"),
-			type: "get_user_info"
-		}
-		let r = await Funcs.request('/api/user', payload);
+		let payload = {type: "get_user_info"}
+		let r = await Funcs.request('/v2/user', payload);
 		this.setState({creation_date: r.creation_date ? r.creation_date : "Unknown", ip: r.ip})
 	}
 	
