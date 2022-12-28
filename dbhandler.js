@@ -55,25 +55,7 @@ module.exports = {
 
         return result[key]
     },
-
-    get_value: async function(user, key){
-        const client = await MongoClient.connect(url, { useNewUrlParser: true });
-        const db = client.db('projecth');
-        const collection = db.collection('users');
-        let query = { username: user };
-        let result = await collection.findOne(query);
-        
-        if (result == null) {
-            query = { ip: user };
-            result = await collection.findOne(query);
-            if (result == null) {
-                return null;
-            }
-        }
-
-        return result[key];
-    },
-    
+   
     set_value: async function(user, key, value){
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
