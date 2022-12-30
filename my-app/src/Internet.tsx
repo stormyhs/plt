@@ -87,7 +87,7 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 	}
 
 	async componentDidMount(){
-		let r = await Funcs.request('/v2/user', {type: "get_user_info"})
+		let r = await Funcs.request('/v2/ip', {type: "get_own_ip_data"})
 		this.setState({ip:r.ip})
 	}
 
@@ -132,8 +132,13 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 
 	async crackPassword(){
 		let ip = (document.getElementById("connect") as HTMLInputElement).value
-		let r = await Funcs.request('/v2/ip', {type: "crack_password", crack_ip: ip})
+		let r = await Funcs.request('/v2/ip', {type: "crack_password", target: ip})
 		this.setState({openPopUp: true, popUpTitle: r.type, popUpDescription: r.message ? r.message : "Task started"})
+	}
+
+	async login(){
+		let password = (document.getElementById("password") as HTMLInputElement).value
+		console.log(password)
 	}
 
 	handleClose(){
@@ -201,8 +206,8 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 					<mui.Stack style={{paddingLeft: "10px", paddingRight: "10px"}} direction="column" spacing={2}>
 						<h3 style={{textAlign: "center", marginBottom: "0px"}}>{(document.getElementById("connect") as HTMLInputElement).value} is online.</h3>
 						<div>
-						<mui.TextField type="password" label="Password" defaultValue="" size='small'/>
-						<mui.Button variant="outlined" color="success">
+						<mui.TextField id="password" type="password" label="Password" defaultValue="" size='small'/>
+						<mui.Button onClick={this.login.bind(this)} variant="outlined" color="success">
 							Log in
 						</mui.Button>
 						</div>

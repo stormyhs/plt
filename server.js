@@ -45,8 +45,6 @@ function unixTime(){
 }
 
 function RequestValidator(req, res, next){
-    console.log(`req.session.login: ${req.session.login}`)
-    console.log(`req.session.username: ${req.session.username}`)
     if(req.session.login != true || req.session.username != req.body.username){
         return res.end(JSON.stringify({type: "relog", message: "You are not logged in"}))
     }
@@ -64,30 +62,27 @@ class Context{
     }
 
     async build_context(){
-        let ctx = {...this.req.body}
+        let ctx = {
+            username: this.req.body.username,
+            actor: await database.get_user(this.req.body.username)
+        }
         
-        ctx.username = this.req.body.username
-        ctx.ip = await database.get_value(this.req.body.username, "ip")
-
-        if(this.req.body.foreignip !== undefined){
-            ctx.foreignip = this.req.body.foreignip
-            ctx.log_actor = `${ctx.ip}`
+        if(this.req.body.acting_as !== undefined){
+            // TODO: validation
+            ctx.acting_as = await database.get_user(this.req.body.acting_as)
         } else{
-            ctx.log_actor = `localhost`
+            ctx.acting_as = await database.get_user(this.req.body.username)
         }
 
-        ctx = await this.build_users(ctx)
-        return ctx
-    }
-
-    async build_users(ctx){
-        ctx.actor = await database.get_user(ctx.username)
-        ctx.target = ctx.actor
-        ctx.target_ip = ctx.actor.ip
-        if(ctx.foreignip){
-            ctx.target = await database.get_user(ctx.foreignip)
-            ctx.target_ip = ctx.target.ip
+        ctx.log_actor = ctx.acting_as.ip
+        if(ctx.actor.ip == ctx.acting_as.ip){
+            ctx.log_actor = "localhost"
         }
+
+        if(this.req.body.target !== undefined){
+            ctx.target = await database.get_user(this.req.body.target)
+        }
+
         return ctx
     }
 }
@@ -149,12 +144,12 @@ app.post('/api/logout', async function(req, res){
 app.post('/v2/user', RequestValidator, async function(req, res){
     let ctx = await new Context(req).init()
 
-    if(ctx.type == "get_user_info"){
+    if(req.body.type == "get_user_info"){
         body = {
             type: "OK",
-            ip: await database.get_value(ctx.username, "ip"),
-            username: await database.get_value(ctx.username, "username"),
-            creation_date: await database.get_value(ctx.username, "creation_date")
+            ip: ctx.actor.ip,
+            username: ctx.actor.username,
+            creation_date: ctx.actor.creation_date
         }
         res.end(JSON.stringify(body))
     } else {
@@ -165,74 +160,73 @@ app.post('/v2/user', RequestValidator, async function(req, res){
 app.post('/v2/storage', RequestValidator, async function(req, res){
     let ctx = await new Context(req).init()
 
-    if(ctx.type == "get_files"){
-        res.end(JSON.stringify(await database.get_value(ctx.target_ip, "files")))
+    if(req.body.type == "get_files"){
+        res.end(JSON.stringify(await database.get_value(ctx.acting_as.username, "files")))
     }
 
-    else if(ctx.type == "remove_file"){
-        let argStatus = checkArgs(ctx, ['file'])
+    else if(req.body.type == "remove_file"){
+        let argStatus = checkArgs(req.body, ['file'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
-        res.end(JSON.stringify(await database.remove_file(ctx.target_ip, ctx.file)))
+        res.end(JSON.stringify(await database.remove_file(ctx.acting_as.username, req.body.file)))
 
-        await database.add_log(ctx.target_ip, `${ctx.log_actor} removed file ${ctx.file}`)
+        await database.add_log(ctx.acting_as.username, `${ctx.log_actor} removed file ${req.body.file}`)
     }
 
-    else if(ctx.type == "rename_file"){
-        let argStatus = checkArgs(ctx, ['old', 'new'])
+    else if(req.body.type == "rename_file"){
+        let argStatus = checkArgs(req.body, ['old', 'new'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
-        res.end(JSON.stringify(await database.rename_file(ctx.target_ip, ctx.old, ctx.new)))
-        await database.add_log(ctx.target_ip, `${ctx.log_actor} renamed file ${ctx.old} to ${ctx.new}`)
+        res.end(JSON.stringify(await database.rename_file(ctx.acting_as.username, req.body.old, req.body.new)))
+        await database.add_log(ctx.acting_as.username, `${ctx.log_actor} renamed file ${req.body.old} to ${req.body.new}`)
         
     }
 
-    else if(ctx.type == "add_file"){
-        let argStatus = checkArgs(ctx, ['file'])
+    else if(req.body.type == "add_file"){
+        let argStatus = checkArgs(req.body, ['file'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
         let file = {
-            filename: ctx.file.filename,
-            content: ctx.file.content,
-            size: ctx.file.content.length / 10
+            filename: req.body.file.filename,
+            content: req.body.file.content,
         }
-        let extention = ctx.file.filename.split(".")[ctx.file.filename.split(".").length - 1]
+        let extention = req.body.file.filename.split(".")[req.body.file.filename.split(".").length - 1]
 
         if(extention == ""){
             res.end(JSON.stringify({type: "error", message: "Filename has no extention."}))
             return
         }
 
-        if(extention == "exe" || ctx.file.filename == ""){
+        if(extention == "exe" || req.body.file.filename == ""){
             res.end(JSON.stringify({type: "error", message: "Invalid file name."}))
             return
         }
         
-        if(ctx.target.hardware.disk + file.size > ctx.target.hardware.maxDisk){
+        if(ctx.acting_as.hardware.disk + file.size > ctx.acting_as.hardware.maxDisk){
             res.end(JSON.stringify({type: "error", message: "Not enough disk space."}))
             return
         }
 
-        let body = ctx.target.files.find((el) => el.filename === ctx.file.filename);
+        let body = ctx.acting_as.files.find((el) => el.filename === req.body.file.filename);
         if(body === null){
-            await database.add_log(ctx.target_ip, `${ctx.log_actor} created file ${ctx.file.filename}`)
+            await database.add_log(ctx.acting_as.username, `${ctx.log_actor} created file ${req.body.file.filename}`)
         } else{
-            await database.add_log(ctx.target_ip, `${ctx.log_actor} edited file ${ctx.file.filename}`)
+            await database.add_log(ctx.acting_as.username, `${ctx.log_actor} edited file ${req.body.file.filename}`)
         }
-        res.end(JSON.stringify(await database.add_file(ctx.target_ip, file)))
+        res.end(JSON.stringify(await database.add_file(ctx.acting_as.username, file)))
     }
 
-    else if(ctx.type == "get_file"){
-        res.end(JSON.stringify(await database.get_file(ctx.target_ip, ctx.file)))
+    else if(req.body.type == "get_file"){
+        res.end(JSON.stringify(await database.get_file(ctx.acting_as.username, req.body.file)))
     }
 
     else{
@@ -243,8 +237,8 @@ app.post('/v2/storage', RequestValidator, async function(req, res){
 app.post('/v2/hardware', RequestValidator, async function(req, res){
     let ctx = await new Context(req).init()
 
-    if(ctx.type == "get_hardware"){
-        res.end(JSON.stringify(await database.get_hardware(ctx.target_ip)))
+    if(req.body.type == "get_hardware"){
+        res.end(JSON.stringify(await database.get_hardware(ctx.acting_as.username)))
     }
 
     else{
@@ -255,25 +249,34 @@ app.post('/v2/hardware', RequestValidator, async function(req, res){
 app.post('/v2/ip', RequestValidator, async function(req, res){
     let ctx = await new Context(req).init()
 
-    if(ctx.type == "get_ip_data"){
+    if(req.body.type == "get_own_ip_data"){
+        res.end(JSON.stringify({type: "OK", ip: ctx.acting_as.ip}))
+        return
+    }
+
+    if(req.body.type == "get_ip_data"){
         let argStatus = checkArgs(req.body, ['scan_ip'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
-        res.end(JSON.stringify(await database.get_ip_data(ctx.scan_ip)))
+        res.end(JSON.stringify(await database.get_ip_data(req.body.scan_ip)))
     }
 
     if(req.body.type == "crack_password"){
-        let argStatus = checkArgs(ctx, ['crack_ip'])
+        let argStatus = checkArgs(req.body, ['target'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
         
-        let cracker = ctx.actor.files.find((el) => el.filename === "cracker.exe");
+        let cracker = ctx.acting_as.files.find((el) => el.filename === "cracker.exe");
         let hasher = ctx.target.files.find((el) => el.filename === "hasher.exe");
+        
+        console.log(`Actor: ${ctx.actor.username}`)
+        console.log(`Acting as: ${ctx.acting_as.username}`)
+        console.log(`Target: ${ctx.target.username}`)
 
         if(hasher == null){
             hasher = {version: 0}
@@ -282,12 +285,18 @@ app.post('/v2/ip', RequestValidator, async function(req, res){
             res.end(JSON.stringify({type: "ERROR", message: "cracker.exe not found"}))
             return
         }
+
         if(cracker.version <= hasher.version){
-            res.end(JSON.stringify({type: "ERROR", message: "cracker.exe is not powerful enough"}))
-            return
+            for(let task in ctx.target.tasks){
+                task = ctx.target.tasks[task]
+                if(task.activities.indexOf("Running") != -1){
+                    res.end(JSON.stringify({type: "ERROR", message: "cracker.exe is not powerful enough"}))
+                    return
+                }
+            }
         }
 
-        let tasks = await database.get_tasks(ctx.username)
+        let tasks = await database.get_tasks(ctx.acting_as.username)
         tasks = tasks['tasks']
         if("cracker.exe" in tasks) {
             const activity = tasks["cracker.exe"].activities.find((activity) => activity.startsWith("Cracking"));
@@ -297,14 +306,31 @@ app.post('/v2/ip', RequestValidator, async function(req, res){
             }
         }
 
-        if(ctx.target.hardware.cpu + (cracker.version * 2) > ctx.target.hardware.maxCpu){
+        if(ctx.acting_as.hardware.cpu + (cracker.version * 2) > ctx.acting_as.maxCpu){
             res.end(JSON.stringify({type: "ERROR", message: "Not enough CPU power."}))
             return
         }
         
-        let ETA = unixTime() + 60 + (60 * (cracker.version - hasher.version))
-        await database.add_log(ctx.ip, `${ctx.log_actor} started cracking ${ctx.crack_ip}`)
-        res.end(JSON.stringify(await database.start_task(ctx.target_ip, "cracker.exe", `Cracking ${ctx.crack_ip}`, ETA)))
+        // let ETA = unixTime() + 60 + (60 * (cracker.version - hasher.version))
+        let ETA = unixTime() + 15
+        await database.add_log(ctx.acting_as.ip, `${ctx.log_actor} started cracking ${req.body.target}`)
+        res.end(JSON.stringify(await database.start_task(ctx.acting_as.username, "cracker.exe", `Cracking ${req.body.target}`, ETA)))
+    }
+
+    if(req.body.type == "login"){
+        let argStatus = checkArgs(req.body, ['target', 'password'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+
+        if(ctx.target.ip_password == req.body.password){
+            res.end(JSON.stringify({type: "OK"}))
+            return
+        } else{
+            res.end(JSON.stringify({type: "ERROR", message: "Incorrect password."}))
+            return
+        }
     }
 
     else{
@@ -315,32 +341,32 @@ app.post('/v2/ip', RequestValidator, async function(req, res){
 app.post('/v2/logs', RequestValidator, async function(req, res){
     let ctx = await new Context(req).init()
 
-    if(ctx.type == "get_logs"){
-        res.end(JSON.stringify(await database.get_value(ctx.target_ip, "logs")))
+    if(req.body.type == "get_logs"){
+        res.end(JSON.stringify(await database.get_value(ctx.acting_as.username, "logs")))
     }
-    if(ctx.type == "set_logs"){
-        let argStatus = checkArgs(ctx, ['logs'])
+    if(req.body.type == "set_logs"){
+        let argStatus = checkArgs(req.body, ['logs'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
-        res.end(JSON.stringify(await database.set_value(ctx.target_ip, "logs", ctx.logs)))
+        res.end(JSON.stringify(await database.set_value(ctx.acting_as.username, "logs", req.body.logs)))
     }
-    if(ctx.type == "clear_logs"){
-        res.end(JSON.stringify(await database.set_value(ctx.target_ip, "logs", [])))
+    if(req.body.type == "clear_logs"){
+        res.end(JSON.stringify(await database.set_value(ctx.acting_as.username, "logs", [])))
     }
 })
 
 app.post('/v2/defaults', async function(req, res){
     let ctx = await new Context(req).init()
 
-    if(ctx.type == "get_cracker"){
-        res.end(JSON.stringify(await database.set_default_files(ctx.target_ip, "cracker.exe")))
+    if(req.body.type == "get_cracker"){
+        res.end(JSON.stringify(await database.set_default_files(ctx.acting_as.username, "cracker.exe")))
         return
     }
 
-    if(ctx.type == "get_hasher"){
-        res.end(JSON.stringify(await database.set_default_files(ctx.target_ip, "hasher.exe")))
+    if(req.body.type == "get_hasher"){
+        res.end(JSON.stringify(await database.set_default_files(ctx.acting_as.username, "hasher.exe")))
         return
     }
 
@@ -353,48 +379,48 @@ app.post('/v2/defaults', async function(req, res){
 app.post('/v2/system', RequestValidator, async function(req, res){
     let ctx = await new Context(req).init()
 
-    if(ctx.type == "get_tasks"){
-        res.end(JSON.stringify(await database.get_tasks(ctx.target_ip, "tasks")))
+    if(req.body.type == "get_tasks"){
+        res.end(JSON.stringify(await database.get_tasks(ctx.acting_as.username, "tasks")))
         return
     }
 
-    if(ctx.type == "start_task"){
-        let argStatus = checkArgs(ctx, ['activity', 'origin'])
+    if(req.body.type == "start_task"){
+        let argStatus = checkArgs(req.body, ['activity', 'origin'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
-        if(ctx.activity == "Running"){
+        if(req.body.activity == "Running"){
             logStr = "ran task"
-        } else if(ctx.activity == "Upgrading"){
+        } else if(req.body.activity == "Upgrading"){
             logStr = "started upgrading"
         }
 
-        let extention = ctx.origin.split(".")[ctx.origin.split(".").length - 1]
+        let extention = req.body.origin.split(".")[req.body.origin.split(".").length - 1]
         if(extention != "exe"){
             res.end(JSON.stringify({type: "ERROR", message: "Only EXE files can start tasks."}))
             return            
         }
 
-        if(ctx.origin == "cracker.exe" && ctx.activity != "Upgrading"){
+        if(req.body.origin == "cracker.exe" && req.body.activity != "Upgrading"){
             res.end(JSON.stringify({type: "ERROR", message: "This file cannot be manually started."}))
             return            
         }
 
-        if(['Upgrading', 'Running'].indexOf(ctx.activity) == -1){
+        if(['Upgrading', 'Running'].indexOf(req.body.activity) == -1){
             res.end(JSON.stringify({type: "ERROR", message: "Invalid task activity."}))
             return
         }
 
-        let file = ctx.target.files.find((el) => el.filename === ctx.origin);
+        let file = ctx.acting_as.files.find((el) => el.filename === req.body.origin);
         try{
-            if(ctx.target.hardware.cpu + (file.version * 2) > ctx.target.hardware.maxCpu){
+            if(ctx.acting_as.hardware.cpu + (file.version * 2) > ctx.acting_as.hardware.maxCpu){
                 res.end(JSON.stringify({type: "ERROR", message: "Not enough CPU power."}))
                 return
             }
-            if(ctx.activity == "Upgrading"){
-                if(ctx.target.hardware.disk + (file.version * 2) > ctx.target.hardware.maxDisk){
+            if(req.body.activity == "Upgrading"){
+                if(ctx.acting_as.hardware.disk + (file.version * 2) > ctx.acting_as.hardware.maxDisk){
                     res.end(JSON.stringify({type: "ERROR", message: "Not enough disk space."}))
                     return
                 }
@@ -404,33 +430,33 @@ app.post('/v2/system', RequestValidator, async function(req, res){
             return
         }
 
-        await database.add_log(ctx.target_ip, `${ctx.log_actor} ${logStr} ${ctx.origin}`)
+        await database.add_log(ctx.acting_as.username, `${ctx.log_actor} ${logStr} ${req.body.origin}`)
 
-        res.end(JSON.stringify(await database.start_task(ctx.target_ip, ctx.origin, ctx.activity)))
+        res.end(JSON.stringify(await database.start_task(ctx.acting_as.username, req.body.origin, req.body.activity)))
         return
     }
 
-    if(ctx.type == "stop_task"){
-        let argStatus = checkArgs(ctx, ['activity', 'origin'])
+    if(req.body.type == "stop_task"){
+        let argStatus = checkArgs(req.body, ['activity', 'origin'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
 
-        if(ctx.activity == "Running" || ctx.activity == "ALL"){
+        if(req.body.activity == "Running" || req.body.activity == "ALL"){
             logStr = "stopped task"
         } else if(ctx.activity == "Upgrading"){
             logStr = "stopped upgrading"
         }
 
-        if(['Upgrading', 'Running', 'ALL'].indexOf(ctx.activity) == -1){
+        if(['Upgrading', 'Running', 'ALL'].indexOf(req.body.activity) == -1){
             res.end(JSON.stringify({type: "ERROR", message: "Invalid task activity."}))
             return
         }
 
-        await database.add_log(ctx.target, `${ctx.log_actor} ${logStr} ${ctx.origin}`)
+        await database.add_log(ctx.acting_as.username, `${ctx.log_actor} ${logStr} ${req.body.origin}`)
 
-        res.end(JSON.stringify(await database.stop_task(ctx.target_ip, ctx.origin, ctx.activity)))
+        res.end(JSON.stringify(await database.stop_task(ctx.acting_as.username, req.body.origin, req.body.activity)))
         return
     }
 

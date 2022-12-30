@@ -112,9 +112,6 @@ class File extends React.Component<{filename: string, content: string, size: any
     console.log(`set name to ${newName}`)
   }
 
-  // TODO: use function props to pass the state from Storage
-  // instead of saving the same state on each File class
-
   getButtons(){
     let buttons = []
     let extention = this.state.name.split(".")[this.state.name.split(".").length - 1]
@@ -175,7 +172,11 @@ class File extends React.Component<{filename: string, content: string, size: any
               }
 
               <mui.Typography gutterBottom variant="h5" component="div">
-                {this.state.name}
+                {this.state.name.length <= 12?
+                this.state.name
+                :
+                `${this.state.name.slice(0, 12) + "..."}`
+                }
               </mui.Typography>
               </div>
               <mui.Typography variant="body2" color="text.secondary">
