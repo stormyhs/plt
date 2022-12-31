@@ -466,6 +466,15 @@ app.post('/v2/system', RequestValidator, async function(req, res){
 
 })
 
+app.post('/v2/network', RequestValidator, async function(req, res){
+    let ctx = await new Context(req).init()
+    
+    if(req.body.type == "get_ip_logins"){
+        res.end(JSON.stringify({type: "OK", ip_logins: ctx.acting_as.ip_logins}))
+        return
+    }
+})
+
 var server = app.listen(4444, function () {
     var port = server.address().port
     console.log(`API running on port ${port}`)

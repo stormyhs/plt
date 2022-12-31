@@ -3,9 +3,11 @@ import Topbar from './Topbar'
 import Sidebar from './Sidebar'
 import * as mui from "@mui/material/"
 import Funcs from './Funcs'
+import Block from './data-display/Block'
 
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
 import MemoryOutlinedIcon from '@mui/icons-material/MemoryOutlined';
+import { isNull } from 'util'
 
 function secsToTime(duration: number) //https://stackoverflow.com/a/11486026
 {   
@@ -33,11 +35,12 @@ class Task extends React.Component<{label: string, title: string, ETA?: number},
     }
 
     async componentDidMount(){
+        let time = Math.round((new Date()).getTime() / 1000)
+
         if(this.props.ETA == undefined){
+            this.setState({ETA: ""})
             return
         }
-
-        let time = Math.round((new Date()).getTime() / 1000)
 
         if(this.props.ETA <= time){
             this.setState({ETA: "ETA: Done"})
@@ -61,33 +64,15 @@ class Task extends React.Component<{label: string, title: string, ETA?: number},
             await sleep(1000)
         }
         this.setState({ETA: "ETA: Done"})
-      }
+    }
 
     render(){
     return(
-        <mui.Box
-            style={{
-                marginBottom: "10px",
-                userSelect: 'none'
-            }}
-            sx={{
-            bgcolor: 'background.paper3',
-            border: 1,
-            borderColor: 'cyan',
-            boxShadow: 1,
-            borderRadius: 2,
-            p: 2,
-            minWidth: 300,
-            }}
-        >
-
-        <mui.Box sx={{color: 'text.secondary'}}>{this.props.label}</mui.Box>
-            <mui.Box sx={{color: 'text.primary', fontSize: 34, fontWeight: 'medium'}}>{this.props.title}</mui.Box>
-            {this.props.ETA?
-                <mui.Box sx={{color: 'text.secondary'}}>{this.state.ETA}</mui.Box>
-                :""
-            }
-        </mui.Box>
+        <Block
+        primary={this.props.label}
+        secondary={this.props.title}
+        tertiary={this.state.ETA}
+        />
     )}
 }
 
@@ -150,7 +135,7 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
                     key={this.state.tasks[task]}
                     label={this.state.tasks[task].origin}
                     title={this.activitiesToString(this.state.tasks[task])}
-                    ETA={Number(this.state.tasks[task].ETA)}
+                    ETA={this.state.tasks[task].ETA}
                   />
                 ))}
               </div>

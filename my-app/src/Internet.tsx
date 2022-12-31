@@ -70,7 +70,7 @@ function PopUp(props: any) {
 		</div>
 	  </mui.Dialog>
 	);
-  }
+}
 
 class Internet extends React.Component<{}, {ip: string, userInput: string, readme: string, currentPage: string, openPopUp: boolean, popUpTitle: string, popUpDescription: string}>{
 	constructor(props: any){
@@ -123,6 +123,12 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 			let r = await Funcs.request('/v2/ip', {type: "get_ip_data", scan_ip:userInput})
 			if(r.readme != null){
 				this.setState({readme:r.readme.content})
+			}
+
+			r = await Funcs.request('/v2/network', {type: "get_ip_logins"});
+
+			if(r.ip_logins[userInput] != undefined){
+				(document.getElementById("password") as HTMLInputElement).value = r.ip_logins[userInput].ip_password
 			}
 
 		} else {
