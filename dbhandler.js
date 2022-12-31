@@ -13,9 +13,38 @@ module.exports = {
     generate_ip: function() {
         const ipParts = [];
         for (let i = 0; i < 4; i++) {
-          ipParts.push(this.randomNumber(10, 255));
+          ipParts.push(this.random_number(10, 255));
         }
         return ipParts.join('.');
+    },
+
+    random_string: function(length=16) {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    },
+      
+    get_user: async function(user){
+        const client = await MongoClient.connect(url, { useNewUrlParser: true });
+        const db = client.db('projecth');
+        const collection = db.collection('users');
+        let query = { username: user };
+        let result = await collection.findOne(query);
+
+        if(result == null){
+            query = {ip: user}
+            result = await collection.findOne(query)
+            if(result == null){
+                return null
+            }
+        }
+
+        await this.check_tasks(user)
+
+        return result
     },
 
     get_value: async function(user, key){
@@ -35,25 +64,7 @@ module.exports = {
 
         return result[key]
     },
-
-    get_value: async function(user, key){
-        const client = await MongoClient.connect(url, { useNewUrlParser: true });
-        const db = client.db('projecth');
-        const collection = db.collection('users');
-        let query = { username: user };
-        let result = await collection.findOne(query);
-        
-        if (result == null) {
-            query = { ip: user };
-            result = await collection.findOne(query);
-            if (result == null) {
-                return null;
-            }
-        }
-
-        return result[key];
-    },
-    
+   
     set_value: async function(user, key, value){
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
@@ -105,6 +116,8 @@ module.exports = {
     },
     
     add_file: async function(user, file){
+        console.log("add_file:")
+        console.log(file)
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
         const collection = db.collection('users');
@@ -123,16 +136,21 @@ module.exports = {
             return {filename: file, content: "This file cannot be modified."}
         }
 
+        if(file.content == undefined){
+            file.content = ""
+        }
+
         var toPush = true
         var files = result.files
         files.forEach(element => {
             if(element.filename == file.filename){
                 element.content = file.content
-                element.size = file.size
+                element.size = file.content.length / 10
                 toPush = false
             }
         });
         if(toPush){
+            file.size = file.content.length / 10
             files.push(file)
         }
         var data = {
@@ -140,8 +158,7 @@ module.exports = {
                 files: files
             }
         }
-        r = await collection.updateOne(query, data)
-        // client.close()
+        await collection.updateOne(query, data)
         return {type: "OK"}
     },
 
@@ -177,7 +194,7 @@ module.exports = {
         const db = client.db('projecth');
         const collection = db.collection('users');
         let query = {username: user};
-        let result = await collection.findOne(q);
+        let result = await collection.findOne(query);
         
         if(result == null){
             query = {ip: user};
@@ -187,10 +204,10 @@ module.exports = {
             }
         }
 
-        const new_files = r.files.filter(element => element.filename != file);
+        const new_files = result.files.filter(element => element.filename != file);
         
         const data = {$set: {files: new_files}};
-        await collection.updateOne(q, data);
+        await collection.updateOne(query, data);
 
         const extention = file.split('.')[file.split('.').length-1];
         if(extention == 'exe'){
@@ -205,7 +222,7 @@ module.exports = {
         const db = client.db('projecth');
         const collection = db.collection('users');
         let query = {username: user};
-        let result = await collection.findOne(q);
+        let result = await collection.findOne(query);
         
         if(result == null){
             query = {ip: user};
@@ -215,7 +232,7 @@ module.exports = {
             }
         }
       
-        const new_files = r.files.map(file => {
+        const new_files = result.files.map(file => {
           if (file.filename === oldName) {
             return { ...file, filename: newName };
           }
@@ -223,7 +240,7 @@ module.exports = {
         });
       
         const data = { $set: { files: new_files } };
-        await collection.updateOne(q, data);
+        await collection.updateOne(query, data);
       
         return { type: 'OK' };
     },
@@ -233,7 +250,7 @@ module.exports = {
         const db = client.db('projecth');
         const collection = db.collection('users');
         let query = {username: user};
-        let result = await collection.findOne(q);
+        let result = await collection.findOne(query);
         
         if(result == null){
             query = {ip: user};
@@ -269,6 +286,7 @@ module.exports = {
             }
             return body
         }
+
         return {type: "OK", username: user}
     },
 
@@ -276,7 +294,7 @@ module.exports = {
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
         const collection = db.collection('users');
-        let query = {username: user};
+        let query = {username: username};
         let result = await collection.findOne(query);
     
         if(result != null){
@@ -289,6 +307,7 @@ module.exports = {
             username: username,
             password: password,
             ip: this.generate_ip(),
+            ip_password: this.random_string(24),
             files: [
                 {filename: "hasher.exe", size: 2, content:"", version: 1.0},
                 {filename: "cracker.exe", size: 2, content: "", version: 1.0}
@@ -306,16 +325,16 @@ module.exports = {
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
         const collection = db.collection('users');
-        let query = {username: ip};
+        let query = {ip: ip};
         let result = await collection.findOne(query);
         
         if(result == null){
             return {type: "ERROR", message: "Could not connect to IP"}
         }
-    
+
         return {
             type: "OK",
-            readme: await this.get_file(ip, "README.txt")
+            readme: await this.get_file(ip, "README.txt"),
         }
     },
 
@@ -388,18 +407,15 @@ module.exports = {
             }
         }
 
-        await this.check_upgrade_tasks(user)
-
         let tasks = await this.get_value(user, "tasks")
         if(tasks == undefined){
             tasks = {}
         }
         
-        // client.close()
         return {type: "OK", tasks: tasks}
     },
 
-    start_task: async function(user, origin, activity){
+    start_task: async function(user, origin, activity, ETA=null){
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
         const collection = db.collection('users');
@@ -446,7 +462,7 @@ module.exports = {
             tasks[origin].activities = newActivities
         }
         
-        ETA = tasks[origin].ETA
+        tasks[origin].ETA = ETA
         if(activity == "Upgrading"){
             let file = await this.get_file(user, origin)
             tasks[origin].ETA = this.unixTime() + (file.version * (15 * 60))
@@ -509,7 +525,7 @@ module.exports = {
         return {type: "OK", newTasks: newTasks}
     },
 
-    check_upgrade_tasks: async function(user){
+    check_tasks: async function(user){
         const client = await MongoClient.connect(url, { useNewUrlParser: true });
         const db = client.db('projecth');
         const collection = db.collection('users');
@@ -529,15 +545,28 @@ module.exports = {
             tasks = {}
         }
 
-        for(let task in tasks){
-            if(tasks[task].ETA != null && tasks[task].ETA <= this.unixTime()){
-                if(tasks[task].activities.indexOf("Upgrading") != -1){
-                    await this.stop_task(user, tasks[task].origin, "Upgrading")
-                    await this.upgrade_file(user, tasks[task].origin)
-                    await this.start_task(user, {origin: tasks[task].origin, activity: "Running"})
+        const unixTime = this.unixTime();
+        for (let task in tasks) {
+            task = tasks[task]
+            if(task.ETA == null || task.ETA > unixTime){
+                continue
+            }
+
+            for(let activity in task.activities){
+                activity = task.activities[activity]
+                if(activity == "Upgrading"){
+                    await this.stop_task(user, task.origin, activity)
+                    await this.upgrade_file(user, task.origin)
+                }
+                if(activity.startsWith("Cracking")){
+                    await this.stop_task(user, task.origin, activity)
+                    console.log("activity:")
+                    console.log(activity)
+                    await this.add_file(user, {filename: `${activity.split(" ")[1]} password.txt`, content: await this.get_value(activity.split(" ")[1], "ip_password")})
                 }
             }
         }
+
     },
 
     set_default_files: async function(user, file){

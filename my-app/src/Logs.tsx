@@ -20,21 +20,21 @@ class Logs extends React.Component{
     async componentDidMount(){
         let logs = (document.getElementById("logs") as HTMLTextAreaElement);
         let payload = {type: "get_logs", username: localStorage.getItem("username")}
-        let r = await Funcs.request('/api/logs', payload)
+        let r = await Funcs.request('/v2/logs', payload)
         logs.value = r        
     }
 
     async saveLogs(){
         let logs = (document.getElementById("logs") as HTMLTextAreaElement).value;
         let payload = {type: "set_logs", logs: logs, username: localStorage.getItem("username")}
-        await Funcs.request('/api/logs', payload)
+        await Funcs.request('/v2/logs', payload)
     }
 
     async clearLogs(){
         let logs = (document.getElementById("logs") as HTMLTextAreaElement);
         let payload = {type: "clear_logs", username: localStorage.getItem("username")}
-        await Funcs.request('/api/logs', payload)
-        logs.value = "*"
+        await Funcs.request('/v2/logs', payload)
+        logs.value = ""
     }
 
 	render(){

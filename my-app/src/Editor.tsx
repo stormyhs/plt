@@ -77,7 +77,7 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
             params = params.split("&")
             let filename = params[0].split("=")[1].replace("%20", " ")
 
-            let r = await Funcs.request('/api/storage', {type: "get_file", file: filename, username: localStorage.getItem("username")})
+            let r = await Funcs.request('/v2/storage', {type: "get_file", file: filename, username: localStorage.getItem("username")})
             this.setState({filename: r.filename, content: r.content});
             (document.getElementById("filename") as HTMLInputElement).value = r.filename;
             (document.getElementById("content") as HTMLTextAreaElement).value = r.content;
@@ -89,7 +89,7 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
         let content = (document.getElementById("content") as HTMLTextAreaElement).value;
         
         let payload = {type: "add_file", file: {filename: filename, content: content}, username: localStorage.getItem("username")}    
-        let r = await Funcs.request('/api/storage', payload)
+        let r = await Funcs.request('/v2/storage', payload)
         if(r.type !== "OK"){
             this.setState({error: true})
         }
@@ -106,30 +106,33 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
                 <Sidebar />
 
                 <div style={{marginLeft: "20px", marginTop: "15px"}}>
-                    <div style={{display: "grid", gridTemplateColumns: "auto auto"}}>
-                        <div>
-                        <SaveButton variant={this.state.error ? "contained" : "outlined"} color='error' onClick={this.handleClick.bind(this)}>Save</SaveButton>
-                        <br/><CssTextField id="filename" style={{marginTop: "20px"}} variant="outlined" label="File name" defaultValue={this.state.filename}></CssTextField>
-                        <mui.TextField id="content" style={{marginTop: "20px"}}
-                          spellCheck="false"
-                          fullWidth
-                          label="Code"
-                          multiline
-                          rows={25}
-                          defaultValue={this.state.content}
-                        />
-                        </div>
-
-                        <div style={{marginLeft: "7vw"}}>
-                        <h1>Code Blocks</h1>
-                        <Block title="Create File" subtitle="filename, content"/>
-                        <Block title="Delete File" subtitle="filename"/>
-                        <Block title="Append Log" subtitle="entry"/>
-                        <Block title="Set Logs" subtitle="entry"/>
-                        </div>
+                    <div style={{marginTop: "20px"}}>
+                    <CssTextField
+                        id="filename"
+                        size="small"
+                        variant="outlined"
+                        label="File name"
+                        defaultValue={this.state.filename}>
+                    </CssTextField>
+                    <SaveButton
+                        style={{marginLeft: "10px"}}
+                        variant={this.state.error ? "contained" : "outlined"}
+                        color='error'
+                        onClick={this.handleClick.bind(this)}>
+                        Save
+                    </SaveButton>
                     </div>
-                
+                    
+                    <mui.TextField id="content" style={{marginTop: "20px", width: "50vw"}}
+                      fullWidth
+                      multiline
+                      spellCheck="false"
+                      label="Code"
+                      rows={25}
+                      defaultValue={this.state.content}
+                    />
                 </div>
+                
             </div>
             </mui.Paper>
             </mui.ThemeProvider>

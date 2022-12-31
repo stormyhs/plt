@@ -44,6 +44,56 @@ function unixTime(){
     return Math.round((new Date()).getTime() / 1000);
 }
 
+function RequestValidator(req, res, next){
+    if(req.session.login != true || req.session.username != req.body.username){
+        return res.end(JSON.stringify({type: "relog", message: "You are not logged in"}))
+    }
+    next()
+}
+
+class Context{
+    constructor(req){
+        this.req = req
+        console.log(`Request: ${JSON.stringify(req.body)}`)
+    }
+
+    async init(){
+        return await this.build_context()
+    }
+
+    async build_context(){
+        let ctx = {
+            username: this.req.body.username,
+            actor: await database.get_user(this.req.body.username)
+        }
+        
+        if(this.req.body.acting_as !== undefined){
+            // TODO: validation
+            ctx.acting_as = await database.get_user(this.req.body.acting_as)
+        } else{
+            ctx.acting_as = await database.get_user(this.req.body.username)
+        }
+
+        ctx.log_actor = ctx.acting_as.ip
+        if(ctx.actor.ip == ctx.acting_as.ip){
+            ctx.log_actor = "localhost"
+        }
+
+        if(this.req.body.target !== undefined){
+            ctx.target = await database.get_user(this.req.body.target)
+        }
+
+        return ctx
+    }
+}
+
+app.post('/v2/test', RequestValidator, async function (req, res){
+    let ctx = await new Context(req).init()
+    let cracker = ctx.actor.files.find((el) => el.filename === "cracker.exe");
+    console.log(cracker)
+    res.end(JSON.stringify(ctx))
+})
+
 app.post('/api/news', async (req, res) =>{
     console.log(`Request: ${JSON.stringify(req.body)}`)
     res.end(JSON.stringify(
@@ -91,24 +141,15 @@ app.post('/api/logout', async function(req, res){
     res.end(JSON.stringify({type: "OK"}))
 })
 
-app.post('/api/user', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({type: "relog"}))
-        return
-    }
-
-    let target = req.body.username
-    if(req.body.foreignip != null){
-        target = req.body.foreignip
-    }
+app.post('/v2/user', RequestValidator, async function(req, res){
+    let ctx = await new Context(req).init()
 
     if(req.body.type == "get_user_info"){
         body = {
             type: "OK",
-            ip: await database.get_value(target, "ip"),
-            username: target,
-            creation_date: await database.get_value(target, "creation_date")
+            ip: ctx.actor.ip,
+            username: ctx.actor.username,
+            creation_date: ctx.actor.creation_date
         }
         res.end(JSON.stringify(body))
     } else {
@@ -116,26 +157,11 @@ app.post('/api/user', async function(req, res){
     }
 })
 
-app.post('/api/storage', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        console.log(req.session)
-        res.end(JSON.stringify({type: "relog"}))
-        return
-    }
-
-    let target = req.body.username
-    if(req.body.foreignip != null){
-        target = req.body.foreignip
-    }
-    let ctx = {
-        username: req.body.username,
-        ip: await database.get_value(req.body.username, "ip"),
-        target: target,
-    }
+app.post('/v2/storage', RequestValidator, async function(req, res){
+    let ctx = await new Context(req).init()
 
     if(req.body.type == "get_files"){
-        res.end(JSON.stringify(await database.get_value(target, "files")))
+        res.end(JSON.stringify(await database.get_value(ctx.acting_as.username, "files")))
     }
 
     else if(req.body.type == "remove_file"){
@@ -145,13 +171,9 @@ app.post('/api/storage', async function(req, res){
             return
         }
 
-        res.end(JSON.stringify(await database.remove_file(target, req.body.file)))
+        res.end(JSON.stringify(await database.remove_file(ctx.acting_as.username, req.body.file)))
 
-        if(target == req.body.username){
-            await database.add_log(target, `localhost removed file ${req.body.file}`)
-        } else{
-            await database.add_log(target, `${ctx.ip} removed file ${req.body.file}`)
-        }
+        await database.add_log(ctx.acting_as.username, `${ctx.log_actor} removed file ${req.body.file}`)
     }
 
     else if(req.body.type == "rename_file"){
@@ -161,12 +183,8 @@ app.post('/api/storage', async function(req, res){
             return
         }
 
-        res.end(JSON.stringify(await database.rename_file(target, req.body.old, req.body.new)))
-        if(target == req.body.username){
-            await database.add_log(target, `localhost renamed file ${req.body.old} to ${req.body.new}`)
-        } else{
-            await database.add_log(target, `${ctx.ip} renamed file ${req.body.old} to ${req.body.new}`)
-        }
+        res.end(JSON.stringify(await database.rename_file(ctx.acting_as.username, req.body.old, req.body.new)))
+        await database.add_log(ctx.acting_as.username, `${ctx.log_actor} renamed file ${req.body.old} to ${req.body.new}`)
         
     }
 
@@ -180,7 +198,6 @@ app.post('/api/storage', async function(req, res){
         let file = {
             filename: req.body.file.filename,
             content: req.body.file.content,
-            size: req.body.file.content.length / 10
         }
         let extention = req.body.file.filename.split(".")[req.body.file.filename.split(".").length - 1]
 
@@ -194,27 +211,22 @@ app.post('/api/storage', async function(req, res){
             return
         }
         
-        let body = await database.get_file(target, req.body.file.filename)
-        if(body === null){
-            await database.add_log(target, `localhost created file ${req.body.file.filename}`)
-            let hardware = await database.get_hardware(target)
-            if(hardware.disk + file.size > hardware.maxDisk){
-                res.end(JSON.stringify({type: "error", message: "Not enough disk space."}))
-                return
-            }
-        } else{
-            if(target == req.body.username){
-                await database.add_log(target, `localhost edited file ${req.body.file.filename}`)
-            } else{
-                await database.add_log(target, `${ctx.ip} edited file ${req.body.file.filename}`)
-            }
-            
+        if(ctx.acting_as.hardware.disk + file.size > ctx.acting_as.hardware.maxDisk){
+            res.end(JSON.stringify({type: "error", message: "Not enough disk space."}))
+            return
         }
-        res.end(JSON.stringify(await database.add_file(target, file)))
+
+        let body = ctx.acting_as.files.find((el) => el.filename === req.body.file.filename);
+        if(body === null){
+            await database.add_log(ctx.acting_as.username, `${ctx.log_actor} created file ${req.body.file.filename}`)
+        } else{
+            await database.add_log(ctx.acting_as.username, `${ctx.log_actor} edited file ${req.body.file.filename}`)
+        }
+        res.end(JSON.stringify(await database.add_file(ctx.acting_as.username, file)))
     }
 
     else if(req.body.type == "get_file"){
-        res.end(JSON.stringify(await database.get_file(target, req.body.file)))
+        res.end(JSON.stringify(await database.get_file(ctx.acting_as.username, req.body.file)))
     }
 
     else{
@@ -222,21 +234,11 @@ app.post('/api/storage', async function(req, res){
     }
 })
 
-app.post('/api/hardware', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        console.log(req.session)
-        res.end(JSON.stringify({type: "relog"}))
-        return
-    }
-
-    let target = req.body.username
-    if(req.body.foreignip != null){
-        target = req.body.foreignip
-    }
+app.post('/v2/hardware', RequestValidator, async function(req, res){
+    let ctx = await new Context(req).init()
 
     if(req.body.type == "get_hardware"){
-        res.end(JSON.stringify(await database.get_hardware(target)))
+        res.end(JSON.stringify(await database.get_hardware(ctx.acting_as.username)))
     }
 
     else{
@@ -244,33 +246,91 @@ app.post('/api/hardware', async function(req, res){
     }
 })
 
-app.post('/api/ip', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({type: "relog"}))
-        return
-    }
+app.post('/v2/ip', RequestValidator, async function(req, res){
+    let ctx = await new Context(req).init()
 
-    let target = req.body.username
-    if(req.body.foreignip != null){
-        target = req.body.foreignip
+    if(req.body.type == "get_own_ip_data"){
+        res.end(JSON.stringify({type: "OK", ip: ctx.acting_as.ip}))
+        return
     }
 
     if(req.body.type == "get_ip_data"){
-        let argStatus = checkArgs(req.body, ['ip'])
+        let argStatus = checkArgs(req.body, ['scan_ip'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+
+        res.end(JSON.stringify(await database.get_ip_data(req.body.scan_ip)))
+    }
+
+    if(req.body.type == "crack_password"){
+        let argStatus = checkArgs(req.body, ['target'])
         if(argStatus.type != "OK"){
             res.end(JSON.stringify(argStatus))
             return
         }
         
-        let ip = await database.get_value(target, "ip")
-        console.log(ip)
-        if([ip, "localhost", "127.0.0.1"].indexOf(req.body.ip) != -1){
-            res.end(JSON.stringify(await database.get_ip_data(ip)))
+        let cracker = ctx.acting_as.files.find((el) => el.filename === "cracker.exe");
+        let hasher = ctx.target.files.find((el) => el.filename === "hasher.exe");
+        
+        console.log(`Actor: ${ctx.actor.username}`)
+        console.log(`Acting as: ${ctx.acting_as.username}`)
+        console.log(`Target: ${ctx.target.username}`)
+
+        if(hasher == null){
+            hasher = {version: 0}
+        }
+        if(cracker == null){
+            res.end(JSON.stringify({type: "ERROR", message: "cracker.exe not found"}))
             return
         }
 
-        res.end(JSON.stringify(await database.get_ip_data(req.body.ip)))
+        if(cracker.version <= hasher.version){
+            for(let task in ctx.target.tasks){
+                task = ctx.target.tasks[task]
+                if(task.activities.indexOf("Running") != -1){
+                    res.end(JSON.stringify({type: "ERROR", message: "cracker.exe is not powerful enough"}))
+                    return
+                }
+            }
+        }
+
+        let tasks = await database.get_tasks(ctx.acting_as.username)
+        tasks = tasks['tasks']
+        if("cracker.exe" in tasks) {
+            const activity = tasks["cracker.exe"].activities.find((activity) => activity.startsWith("Cracking"));
+            if (activity) {
+                res.end(JSON.stringify({type: "ERROR", message: "cracker.exe is already cracking a hash"}));
+                return;
+            }
+        }
+
+        if(ctx.acting_as.hardware.cpu + (cracker.version * 2) > ctx.acting_as.maxCpu){
+            res.end(JSON.stringify({type: "ERROR", message: "Not enough CPU power."}))
+            return
+        }
+        
+        // let ETA = unixTime() + 60 + (60 * (cracker.version - hasher.version))
+        let ETA = unixTime() + 15
+        await database.add_log(ctx.acting_as.ip, `${ctx.log_actor} started cracking ${req.body.target}`)
+        res.end(JSON.stringify(await database.start_task(ctx.acting_as.username, "cracker.exe", `Cracking ${req.body.target}`, ETA)))
+    }
+
+    if(req.body.type == "login"){
+        let argStatus = checkArgs(req.body, ['target', 'password'])
+        if(argStatus.type != "OK"){
+            res.end(JSON.stringify(argStatus))
+            return
+        }
+
+        if(ctx.target.ip_password == req.body.password){
+            res.end(JSON.stringify({type: "OK"}))
+            return
+        } else{
+            res.end(JSON.stringify({type: "ERROR", message: "Incorrect password."}))
+            return
+        }
     }
 
     else{
@@ -278,20 +338,11 @@ app.post('/api/ip', async function(req, res){
     }
 })
 
-app.post('/api/logs', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({type: "relog"}))
-        return
-    }
-
-    let target = req.body.username
-    if(req.body.foreignip != null){
-        target = req.body.foreignip
-    }
+app.post('/v2/logs', RequestValidator, async function(req, res){
+    let ctx = await new Context(req).init()
 
     if(req.body.type == "get_logs"){
-        res.end(JSON.stringify(await database.get_value(target, "logs")))
+        res.end(JSON.stringify(await database.get_value(ctx.acting_as.username, "logs")))
     }
     if(req.body.type == "set_logs"){
         let argStatus = checkArgs(req.body, ['logs'])
@@ -299,32 +350,23 @@ app.post('/api/logs', async function(req, res){
             res.end(JSON.stringify(argStatus))
             return
         }
-        res.end(JSON.stringify(await database.set_value(target, "logs", req.body.logs)))
+        res.end(JSON.stringify(await database.set_value(ctx.acting_as.username, "logs", req.body.logs)))
     }
     if(req.body.type == "clear_logs"){
-        res.end(JSON.stringify(await database.set_value(target, "logs", [])))
+        res.end(JSON.stringify(await database.set_value(ctx.acting_as.username, "logs", [])))
     }
 })
 
-app.post('/api/defaults', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({type: "relog"}))
-        return
-    }
-
-    let target = req.body.username
-    if(req.body.foreignip != null){
-        target = req.body.foreignip
-    }
+app.post('/v2/defaults', async function(req, res){
+    let ctx = await new Context(req).init()
 
     if(req.body.type == "get_cracker"){
-        res.end(JSON.stringify(await database.set_default_files(target, "cracker.exe")))
+        res.end(JSON.stringify(await database.set_default_files(ctx.acting_as.username, "cracker.exe")))
         return
     }
 
     if(req.body.type == "get_hasher"){
-        res.end(JSON.stringify(await database.set_default_files(target, "hasher.exe")))
+        res.end(JSON.stringify(await database.set_default_files(ctx.acting_as.username, "hasher.exe")))
         return
     }
 
@@ -334,27 +376,11 @@ app.post('/api/defaults', async function(req, res){
 
 })
 
-app.post('/api/system', async function(req, res){
-    console.log(`Request: ${JSON.stringify(req.body)}`)
-    if(req.session.login != true || req.session.username != req.body.username){
-        res.end(JSON.stringify({type: "relog"}))
-        return
-    }
-
-    let target = req.body.username
-    if(req.body.foreignip != null){
-        target = req.body.foreignip
-    }
-    let ctx = {
-        username: req.body.username,
-        ip: await database.get_value(req.body.username, "ip"),
-        target: target,
-    }
-
-    let logStr = ""
+app.post('/v2/system', RequestValidator, async function(req, res){
+    let ctx = await new Context(req).init()
 
     if(req.body.type == "get_tasks"){
-        res.end(JSON.stringify(await database.get_tasks(target, "tasks")))
+        res.end(JSON.stringify(await database.get_tasks(ctx.acting_as.username, "tasks")))
         return
     }
 
@@ -387,16 +413,14 @@ app.post('/api/system', async function(req, res){
             return
         }
 
-        let hardware = await database.get_hardware(target)
-        let file = await database.get_file(target, req.body.origin)
-
+        let file = ctx.acting_as.files.find((el) => el.filename === req.body.origin);
         try{
-            if(hardware.cpu + (file.version * 2) > hardware.maxCpu){
+            if(ctx.acting_as.hardware.cpu + (file.version * 2) > ctx.acting_as.hardware.maxCpu){
                 res.end(JSON.stringify({type: "ERROR", message: "Not enough CPU power."}))
                 return
             }
             if(req.body.activity == "Upgrading"){
-                if(hardware.disk + (file.version * 2) > hardware.maxDisk){
+                if(ctx.acting_as.hardware.disk + (file.version * 2) > ctx.acting_as.hardware.maxDisk){
                     res.end(JSON.stringify({type: "ERROR", message: "Not enough disk space."}))
                     return
                 }
@@ -406,13 +430,9 @@ app.post('/api/system', async function(req, res){
             return
         }
 
-        if(target == req.body.username){
-            await database.add_log(target, `localhost ${logStr} ${req.body.origin}`)
-        } else{
-            await database.add_log(target, `${ctx.ip} ${logStr} ${req.body.origin}`)
-        }
+        await database.add_log(ctx.acting_as.username, `${ctx.log_actor} ${logStr} ${req.body.origin}`)
 
-        res.end(JSON.stringify(await database.start_task(target, req.body.origin, req.body.activity)))
+        res.end(JSON.stringify(await database.start_task(ctx.acting_as.username, req.body.origin, req.body.activity)))
         return
     }
 
@@ -423,24 +443,20 @@ app.post('/api/system', async function(req, res){
             return
         }
 
-        if(req.body.activity == "Running"){
+        if(req.body.activity == "Running" || req.body.activity == "ALL"){
             logStr = "stopped task"
-        } else if(req.body.activity == "Upgrading"){
+        } else if(ctx.activity == "Upgrading"){
             logStr = "stopped upgrading"
         }
 
-        if(['Upgrading', 'Running'].indexOf(req.body.activity) == -1){
+        if(['Upgrading', 'Running', 'ALL'].indexOf(req.body.activity) == -1){
             res.end(JSON.stringify({type: "ERROR", message: "Invalid task activity."}))
             return
         }
 
-        if(target == req.body.username){
-            await database.add_log(target, `localhost ${logStr} ${req.body.origin}`)
-        } else{
-            await database.add_log(target, `${ctx.ip} ${logStr} ${req.body.origin}`)
-        }
+        await database.add_log(ctx.acting_as.username, `${ctx.log_actor} ${logStr} ${req.body.origin}`)
 
-        res.end(JSON.stringify(await database.stop_task(target, req.body.origin, req.body.activity)))
+        res.end(JSON.stringify(await database.stop_task(ctx.acting_as.username, req.body.origin, req.body.activity)))
         return
     }
 

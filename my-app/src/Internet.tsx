@@ -5,7 +5,20 @@ import Funcs from './Funcs'
 import * as mui from "@mui/material/"
 import { Link } from "react-router-dom";
 
-class Block extends React.Component<{label: string, title: string,}, {}>{
+// TODO / Plans
+
+// There should be pre-defined websites a player can go to
+// One of them should be there to get you on your feet,
+// others can be banks, hardware stores, etc etc.
+// The data for these sites should probably not be stored
+// here on the front-end.
+
+// IP scans should provide more data, though this needs to
+// be planned out further.
+
+// IP resets should be available to the player, at a price / cooldown.
+
+class Readme extends React.Component<{label: string, title: string,}, {}>{
     render(){
     return(
         <mui.Box
@@ -34,34 +47,56 @@ class Block extends React.Component<{label: string, title: string,}, {}>{
     )}
 }
 
-class Internet extends React.Component<{},
-{ip:string, scanned:boolean,userInput:string,invalidInput:boolean,
-readme:string,downloader:boolean,login:boolean}>
-{
+function PopUp(props: any) {
+	const { onClose, selectedValue, open, title, desc } = props;
+  
+	const handleClose = () => {
+	  onClose(selectedValue);
+	};
+  
+	return (
+	  <mui.Dialog onClose={handleClose} open={open}>
+		<div style={{marginLeft: "20px", marginRight: "20px"}}>
+		<mui.DialogTitle>
+		  <mui.Typography variant="h5">
+			{props.title}
+		  </mui.Typography>
+		</mui.DialogTitle>
+		<mui.DialogContent>
+		  <mui.Typography variant="h6">
+			{props.desc}
+		  </mui.Typography>
+		</mui.DialogContent>
+		</div>
+	  </mui.Dialog>
+	);
+  }
+
+class Internet extends React.Component<{}, {ip: string, userInput: string, readme: string, currentPage: string, openPopUp: boolean, popUpTitle: string, popUpDescription: string}>{
 	constructor(props: any){
 		super(props)
 		this.state = {
 			ip:"",
 			userInput:"",
 			readme:"",
-			downloader:false,
-			scanned:false,
-			invalidInput:false,
-			login:false
+			currentPage: "default",
+			openPopUp: false,
+			popUpTitle: "",
+			popUpDescription: ""
 		}
 	}
 
 	async componentDidMount(){
-		let r = await Funcs.request('/api/user', {type: "get_user_info", username: localStorage.getItem("username")})
+		let r = await Funcs.request('/v2/ip', {type: "get_own_ip_data"})
 		this.setState({ip:r.ip})
 	}
 
 	async download(e: any){
 		if(e.target.id == "cracker"){
-			let r1 = await Funcs.request('/api/defaults', {type: "get_cracker", username: localStorage.getItem("username")})
+			let r1 = await Funcs.request('/v2/defaults', {type: "get_cracker"})
 		}
 		if(e.target.id == "hasher"){
-			let r2 = await Funcs.request('/api/defaults', {type: "get_hasher", username: localStorage.getItem("username")})
+			let r2 = await Funcs.request('/v2/defaults', {type: "get_hasher"})
 		}
 		console.log(e.target.id)
 	}
@@ -74,42 +109,40 @@ readme:string,downloader:boolean,login:boolean}>
 
 	async handleClick(){
 		let userInput = (document.getElementById("connect") as HTMLInputElement).value
-		let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
 
-		if (r.type == "OK"){
-			this.setState({scanned: true})
-			this.setState({invalidInput: false})
-			this.setState({downloader: false})
+		if(userInput == "hackeracademy.com"){
+			this.setState({currentPage: "downloader"})
+			return
+		}
+
+		let r = await Funcs.request('/v2/ip', {type: "get_ip_data", scan_ip:userInput})
+		if(r.type == "OK"){
+			this.setState({currentPage: "scanned"})
 
 			let userInput = (document.getElementById("connect") as HTMLInputElement).value
-			let r = await Funcs.request('/api/ip', {type: "get_ip_data", username: localStorage.getItem("username"), ip:userInput,})
-			if (this.state.downloader !== true){
-				if(r.readme == null){
-					this.setState({readme:""})
-				} else{
-					this.setState({readme:r.readme.content})
-				}
+			let r = await Funcs.request('/v2/ip', {type: "get_ip_data", scan_ip:userInput})
+			if(r.readme != null){
+				this.setState({readme:r.readme.content})
 			}
 
-		} else if(userInput == "hackeracademy.com") {
-			this.setState({scanned: false})
-			this.setState({invalidInput: false})
-			this.setState({downloader: true})
 		} else {
-			this.setState({scanned: false})
-			this.setState({invalidInput: true})
-			this.setState({downloader: false})
+			this.setState({currentPage: "invalidInput"})
 		}
 	}
 
 	async crackPassword(){
-		// this is meant to be a cracker vs hasher thing
-		// for now it just logs you in unconditionally
-		this.setState({scanned: false})
-		this.setState({invalidInput: false})
-		this.setState({downloader: false})
-		this.setState({login: true})
-		localStorage.setItem("foreignip", (document.getElementById("connect") as HTMLInputElement).value)
+		let ip = (document.getElementById("connect") as HTMLInputElement).value
+		let r = await Funcs.request('/v2/ip', {type: "crack_password", target: ip})
+		this.setState({openPopUp: true, popUpTitle: r.type, popUpDescription: r.message ? r.message : "Task started"})
+	}
+
+	async login(){
+		let password = (document.getElementById("password") as HTMLInputElement).value
+		console.log(password)
+	}
+
+	handleClose(){
+		this.setState({openPopUp: false})
 	}
 
 	disconnect(){
@@ -125,6 +158,12 @@ readme:string,downloader:boolean,login:boolean}>
 		<Topbar />
 		<div style={{display: "flex"}}>
 		<Sidebar />
+		<PopUp
+		open={this.state.openPopUp}
+		onClose={this.handleClose.bind(this)}
+		title={this.state.popUpTitle}
+		desc={this.state.popUpDescription}
+		/>
 
 		<div style={{marginLeft:"20px", marginTop:"20px"}}>
 			<mui.Stack style={{marginTop: "10px"}} direction="row" spacing={1}>
@@ -161,16 +200,14 @@ readme:string,downloader:boolean,login:boolean}>
 			:
 			""}
 
-			{this.state.scanned?
+			{this.state.currentPage == "scanned"?
 			<div>
 				<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px", display: 'inline-block'}}>
 					<mui.Stack style={{paddingLeft: "10px", paddingRight: "10px"}} direction="column" spacing={2}>
 						<h3 style={{textAlign: "center", marginBottom: "0px"}}>{(document.getElementById("connect") as HTMLInputElement).value} is online.</h3>
 						<div>
-						<mui.TextField type="password" label="Password" defaultValue="" size='small'/>
-						<mui.Button variant="outlined" color="success"
-							// style={{marginRight:"10px", marginTop:"10px", marginBottom:"10px", marginLeft:"10px"}}
-							>
+						<mui.TextField id="password" type="password" label="Password" defaultValue="" size='small'/>
+						<mui.Button onClick={this.login.bind(this)} variant="outlined" color="success">
 							Log in
 						</mui.Button>
 						</div>
@@ -179,30 +216,24 @@ readme:string,downloader:boolean,login:boolean}>
 						onClick={this.crackPassword.bind(this)}>
 							Crack Password
 						</mui.Button>
-
 					</mui.Stack>
 				</div>
+
+				{this.state.readme != "" ?
 				<div style={{marginTop: "20px"}}>
 					<mui.Box>
-						<mui.Typography variant="h6">
-							README.txt
-						</mui.Typography>
-						<mui.TextField style={{marginTop: "20px", width: "30vw"}}
-              				spellCheck="false"
-              				fullWidth
-              				label=""
-              				multiline
-              				rows={10}
-              				defaultValue={this.state.readme}
-            			/>
+						<Readme label="README.txt" title={this.state.readme}/>
 					</mui.Box>
 				</div>
+				:""
+				}
+
 			</div>
 			:
 			""
 			}
 
-			{this.state.invalidInput?
+			{this.state.currentPage == "invalidInput"?
 			<div style={{marginTop: "10px"}}>
 				<mui.Typography variant="h5" gutterBottom>
 					Connection failed.
@@ -212,7 +243,7 @@ readme:string,downloader:boolean,login:boolean}>
 			""
 			}
 
-			{this.state.downloader?
+			{this.state.currentPage == "downloader"?
 			<div style={{borderStyle:"solid", borderWidth:"1px", marginTop:"20px",}}>
 				<mui.Box sx={{ width: '100%', maxWidth: 800}}>
 				<br/>

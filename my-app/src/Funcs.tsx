@@ -3,8 +3,8 @@ class Funcs{
         if(data.username == null){
             data.username = localStorage.getItem("username")
         }
-        if(localStorage.getItem("foreignip") != null){
-            data.foreignip = localStorage.getItem("foreignip")
+        if(localStorage.getItem("acting_as") != null){
+            data.acting_as = localStorage.getItem("acting_as")
         }
 
         let r = await fetch(`http://localhost:4444${endpoint}`, {

@@ -36,7 +36,7 @@ function RenameDialog(props: any) {
         old: props.old,
         new: newName
       }
-      await Funcs.request('/api/storage', payload);
+      await Funcs.request('/v2/storage', payload);
       props.rename(newName)
     }
   }
@@ -92,7 +92,7 @@ class File extends React.Component<{filename: string, content: string, size: any
 
   async delete(){
     console.log("Delete on " + this.props.filename);
-    let r = await Funcs.request('/api/storage', {type: 'remove_file', file: this.props.filename, username: localStorage.getItem("username")})
+    let r = await Funcs.request('/v2/storage', {type: 'remove_file', file: this.props.filename, username: localStorage.getItem("username")})
     console.log(r)
     if(r.type === "OK"){
       (document.getElementById(this.props.filename) as HTMLElement).remove();
@@ -112,9 +112,6 @@ class File extends React.Component<{filename: string, content: string, size: any
     console.log(`set name to ${newName}`)
   }
 
-  // TODO: use function props to pass the state from Storage
-  // instead of saving the same state on each File class
-
   getButtons(){
     let buttons = []
     let extention = this.state.name.split(".")[this.state.name.split(".").length - 1]
@@ -132,6 +129,13 @@ class File extends React.Component<{filename: string, content: string, size: any
           buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "start")} size="small" color="primary">Run</mui.Button>)
         }
       }
+
+      if(this.state.name == "cracker.exe"){
+        if(status.running){
+          buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop")} size="small" color="primary">Running</mui.Button>)
+        }
+      }
+
       if(status.upgrading){
         buttons.push(<mui.Button onClick={async (e) => await this.props.taskHandler(this.state.name, "stop_upgrade")} size="small" color="primary">Upgrading</mui.Button>)
       } else{
@@ -168,7 +172,11 @@ class File extends React.Component<{filename: string, content: string, size: any
               }
 
               <mui.Typography gutterBottom variant="h5" component="div">
-                {this.state.name}
+                {this.state.name.length <= 12?
+                this.state.name
+                :
+                `${this.state.name.slice(0, 12) + "..."}`
+                }
               </mui.Typography>
               </div>
               <mui.Typography variant="body2" color="text.secondary">
@@ -223,15 +231,15 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
   }
 
   async componentDidMount(){
-    let r = await Funcs.request('/api/system', {type: "get_tasks", username: localStorage.getItem("username")})
+    let r = await Funcs.request('/v2/system', {type: "get_tasks"})
     this.setState({tasks: r.tasks})
-    r = await Funcs.request('/api/storage', {type: "get_files", username: localStorage.getItem("username")})
+    r = await Funcs.request('/v2/storage', {type: "get_files"})
     this.setState({files: r})
   }
 
   async taskHandler(name: string, type: string){
     if(type == "start"){
-      let r = await Funcs.request('/api/system',
+      let r = await Funcs.request('/v2/system',
         {type: 'start_task',
         origin: name,
         activity: "Running",
@@ -246,12 +254,15 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
     }
 
     if(type == "stop"){
-      let r = await Funcs.request('/api/system',
-      {type: 'stop_task',
-      origin: name,
-      activity: "Running",
-      username: localStorage.getItem("username")
-      })
+      let payload = {
+        type: 'stop_task',
+        origin: name,
+        activity: "Running",
+      }
+      if(payload.origin == "cracker.exe"){
+        payload.activity = "ALL"
+      }
+      let r = await Funcs.request('/v2/system', payload)
 
       if(r.type === "OK"){
         this.setState({tasks: r.newTasks})
@@ -261,7 +272,7 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
     }
 
     if(type == "upgrade"){
-      let r = await Funcs.request('/api/system',
+      let r = await Funcs.request('/v2/system',
       {type: 'start_task',
       origin: name,
       activity: "Upgrading",
@@ -276,7 +287,7 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
     }
 
     if(type == "stop_upgrade"){
-      let r = await Funcs.request('/api/system',
+      let r = await Funcs.request('/v2/system',
       {type: 'stop_task',
       origin: name,
       activity: "Upgrading",
@@ -297,14 +308,20 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
       running: false,
       upgrading: false
     }
-
+    if(this.state.tasks == undefined){
+      return status
+    }
+    
     if(this.state.tasks[name] != undefined){
       console.log(this.state.tasks[name])
-      if(this.state.tasks[name].activities.indexOf("Running") != -1){
-        status.running = true
-      }
-      if(this.state.tasks[name].activities.indexOf("Upgrading") != -1){
-        status.upgrading = true
+      for(let activity in this.state.tasks[name].activities){
+        activity = this.state.tasks[name].activities[activity]
+        if(activity == "Running" || activity.startsWith("Cracking")){
+          status.running = true
+        }
+        if(activity == "Upgrading"){
+          status.upgrading = true
+        }
       }
     }
     return status
