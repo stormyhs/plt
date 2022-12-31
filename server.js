@@ -357,7 +357,7 @@ app.post('/v2/logs', RequestValidator, async function(req, res){
     }
 })
 
-app.post('/v2/defaults', async function(req, res){
+app.post('/v2/defaults', RequestValidator, async function(req, res){
     let ctx = await new Context(req).init()
 
     if(req.body.type == "get_cracker"){
