@@ -16,7 +16,7 @@ class Switch extends React.Component<{name:String ,content:String,status: boolea
         
         <mui.Typography variant="h6" gutterBottom>{this.props.name}</mui.Typography>
         <mui.Switch
-            checked={this.props.status}
+            
             onChange={this.props.oncheck.bind(this)}
             inputProps={{ 'aria-label': 'controlled' }}
             color="primary"
@@ -84,7 +84,7 @@ class SelectSetting extends React.Component<{name:String ,content:String,options
 class MySelect extends React.Component<{option:string}> {
     render(){
         return(
-            <mui.MenuItem value={this.props.option}>{this.props.option}</mui.MenuItem>
+            <mui.MenuItem>{this.props.option}</mui.MenuItem>
         )
     }
 }
@@ -130,7 +130,7 @@ class CheckSetting extends React.Component<{name:String ,content:String,labels_c
 class Check extends React.Component<{label:string,checked:boolean,oncheck:Function}> {
     render(){
         return(
-            <mui.FormControlLabel control={<mui.Checkbox />} checked={this.props.checked} label={this.props.label} onChange={this.props.oncheck.bind(this)}/>
+            <mui.FormControlLabel control={<mui.Checkbox />} label={this.props.label} onChange={this.props.oncheck.bind(this)}/>
         )
     }
 }
@@ -178,7 +178,7 @@ class Radioetting extends React.Component<{name:String ,content:String,labels_ch
 class Radio extends React.Component<{label:string,checked:boolean,oncheck:Function}> {
     render(){
         return(
-            <mui.FormControlLabel control={<mui.Radio />} checked={this.props.checked} label={this.props.label} onChange={this.props.oncheck.bind(this)}/>
+            <mui.FormControlLabel control={<mui.Radio />} label={this.props.label} onChange={this.props.oncheck.bind(this)}/>
         )
     }
 }
@@ -210,7 +210,7 @@ class Settings extends React.Component{
 
         <div>
 
-        <mui.Card variant="outlined" style= {{marginLeft:"64px",marginTop:"12px",border:"white solid 1px", width:"40vw",overflowY:'auto',maxHeight:'85vh'}}>      
+        <mui.Card variant="outlined" style= {{marginLeft:"16px",marginTop:"12px",border:"white solid 1px", width:"40vw",overflowY:'auto',maxHeight:'85vh'}}>      
         
         <Switch name='Dark mode' content='description example number 1' status={true} oncheck={this.handleChangeBool.bind(this)}/>
         <Switch name='Femboy mode' content=':)' status={true} oncheck={this.handleChangeBool.bind(this)}/>
