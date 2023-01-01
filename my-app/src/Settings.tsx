@@ -3,7 +3,8 @@ import * as mui from "@mui/material/"
 
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
-
+import OurSwitch from './options/OurSwitch'
+/*
 class Switch extends React.Component<{name:String ,content:String,status: boolean, oncheck: Function}> {
 
     render(){
@@ -35,7 +36,7 @@ class Switch extends React.Component<{name:String ,content:String,status: boolea
     )
     }
 }
-
+*/
 
 /* this class is bugged, do not expect it to work properly. */
 class SelectSetting extends React.Component<{name:String ,content:String,options: any,selected_value:any,label: string, oncheck: Function}>{
@@ -212,8 +213,8 @@ class Settings extends React.Component{
 
         <mui.Card variant="outlined" style= {{marginLeft:"16px",marginTop:"12px",border:"white solid 1px", width:"40vw",overflowY:'auto',maxHeight:'85vh'}}>      
         
-        <Switch name='Dark mode' content='description example number 1' status={true} oncheck={this.handleChangeBool.bind(this)}/>
-        <Switch name='Femboy mode' content=':)' status={true} oncheck={this.handleChangeBool.bind(this)}/>
+        <OurSwitch title='Dark mode' subtitle='description example number 1' oncheck={this.handleChangeBool.bind(this)}/>
+        <OurSwitch title='Femboy mode' subtitle=':)' oncheck={this.handleChangeBool.bind(this)}/>
         <SelectSetting name='Femboy mode' content=':)' options= {['test1','test2','test3']} selected_value={'test1'} label='testing of test'oncheck={this.handleChangeSelect.bind(this)}/>
         <CheckSetting oncheck={this.handleChangeSelect.bind(this)} name='Checking deez settings' content='smthsmthsmth' labels_checked={[['label1 is true',true],['label2 is false',false],['labels are scalable easely',true],['labels are scalable easely',true],['labels are scalable easely',true],['labels are scalable easely',true],['labels are scalable easely',true],['labels are scalable easely',true],['labels are scalable easely',true],['labels are scalable easely',true]]}/>
         <Radioetting oncheck={this.handleChangeSelect.bind(this)} name='Radioing deez settings' content='htmshtsmhtsm' labels_checked={[['option one is selected',true],['option two isnt',false],['ayo this sheet is scalable',false],['ayo this sheet is scalable',false],['ayo this sheet is scalable',false],['ayo this sheet is scalable',false],['ayo this sheet is scalable',false],['ayo this sheet is scalable',false]]}/>
