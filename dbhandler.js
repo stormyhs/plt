@@ -302,7 +302,7 @@ module.exports = {
         }
 
         const date = new Date();
-        creation_date = `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`
+        creation_date = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`
         let data = {
             username: username,
             password: password,
