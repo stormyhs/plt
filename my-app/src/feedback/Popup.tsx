@@ -7,6 +7,12 @@ type PopupType = {
     handleClose: () => void
 }
 
+/**
+ * Sends a notification on the screen.
+ * @param {string} title The popup title.
+ * @param {string} subtitle (opt) The popup subtitle.
+ * @param {function} handleClose What onClose will call.
+ */
 const Popup: React.FC<PopupType> = (props) => {
     const [open, setOpen] = useState(true)
 

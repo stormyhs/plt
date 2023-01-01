@@ -10,7 +10,8 @@ type SnackbarType = {
 /**
  * Sends a notification on the screen.
  * @param {string} message The message to display.
- * @param {number} duration How long to keep the snackbar. Default `3500`ms
+ * @param {number} duration (opt) How long to keep the snackbar. Default `3500`ms
+ * @param {function} handleClose What onClose will call.
  */
 const Snackbar: React.FC<SnackbarType> = (props) => {
     const [open, setOpen] = useState(true)
