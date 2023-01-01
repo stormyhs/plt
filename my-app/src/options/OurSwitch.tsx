@@ -9,8 +9,8 @@ type SwitchType = {
 
 /**
  * Sends a notification on the screen.
- * @param {string} title The switch title.
- * @param {string} subtitle (opt) The switch subtitle.
+ * @param {string} title The switch card title.
+ * @param {string} subtitle (opt) The switch card subtitle.
  * @param {function} onCheck What onCheck will call.
  */
 const OurSwitch: React.FC<SwitchType> = (props) => {

@@ -15,7 +15,7 @@ type CheckboxType = {
  * @param {string[]} labels The labels of the different checkboxes you want to have
  * @param {function} onCheck What onCheck will call.
  */
-const OurSwitch: React.FC<CheckboxType> = (props) => {
+const OurCheckbox: React.FC<CheckboxType> = (props) => {
 
     return(
     <div>
@@ -34,7 +34,7 @@ const OurSwitch: React.FC<CheckboxType> = (props) => {
                     ?
                     (<>
                         {props.labels.map((label: any) =>{
-                            return  <div style={{marginLeft:'20px'}}><mui.FormControlLabel control={<mui.Checkbox />} label={props.labels} onChange={props.onCheck.bind(this)}/></div>
+                            return  <div style={{marginLeft:'20px'}}><mui.FormControlLabel control={<mui.Checkbox />} label={label} onChange={props.onCheck.bind(this)}/></div>
                         })}
                     </>)
                     :
@@ -51,4 +51,4 @@ const OurSwitch: React.FC<CheckboxType> = (props) => {
     )
 }
 
-export default OurSwitch;
+export default OurCheckbox;
