@@ -1,9 +1,11 @@
 import React from 'react'
+import { Link } from "react-router-dom";
+import * as mui from "@mui/material/"
+
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
-import * as mui from "@mui/material/"
-import { Link } from "react-router-dom";
+import Popup from './feedback/Popup'
 
 // TODO / Plans
 
@@ -47,32 +49,7 @@ class Readme extends React.Component<{label: string, title: string,}, {}>{
     )}
 }
 
-function PopUp(props: any) {
-	const { onClose, selectedValue, open, title, desc } = props;
-  
-	const handleClose = () => {
-	  onClose(selectedValue);
-	};
-  
-	return (
-	  <mui.Dialog onClose={handleClose} open={open}>
-		<div style={{marginLeft: "20px", marginRight: "20px"}}>
-		<mui.DialogTitle>
-		  <mui.Typography variant="h5">
-			{props.title}
-		  </mui.Typography>
-		</mui.DialogTitle>
-		<mui.DialogContent>
-		  <mui.Typography variant="h6">
-			{props.desc}
-		  </mui.Typography>
-		</mui.DialogContent>
-		</div>
-	  </mui.Dialog>
-	);
-}
-
-class Internet extends React.Component<{}, {ip: string, userInput: string, readme: string, currentPage: string, openPopUp: boolean, popUpTitle: string, popUpDescription: string}>{
+class Internet extends React.Component<{}, {ip: string, userInput: string, readme: string, currentPage: string, sendPopUp: boolean, popUpTitle: string, popUpSubtitle: string | null}>{
 	constructor(props: any){
 		super(props)
 		this.state = {
@@ -80,9 +57,9 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 			userInput:"",
 			readme:"",
 			currentPage: "default",
-			openPopUp: false,
+			sendPopUp: false,
 			popUpTitle: "",
-			popUpDescription: ""
+			popUpSubtitle: ""
 		}
 	}
 
@@ -139,7 +116,7 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 	async crackPassword(){
 		let ip = (document.getElementById("connect") as HTMLInputElement).value
 		let r = await Funcs.request('/v2/ip', {type: "crack_password", target: ip})
-		this.setState({openPopUp: true, popUpTitle: r.type, popUpDescription: r.message ? r.message : "Task started"})
+		await this.sendPopUp(r.type, r.message)
 	}
 
 	async login(){
@@ -147,12 +124,8 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 		console.log(password)
 	}
 
-	handleClose(){
-		this.setState({openPopUp: false})
-	}
-
-	disconnect(){
-		localStorage.removeItem("foreignip")
+	async sendPopUp(title: string, subtitle?: string){
+		this.setState({sendPopUp: true, popUpTitle: title, popUpSubtitle: subtitle ? subtitle : null})
 	}
 
 	render(){
@@ -164,12 +137,14 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 		<Topbar />
 		<div style={{display: "flex"}}>
 		<Sidebar />
-		<PopUp
-		open={this.state.openPopUp}
-		onClose={this.handleClose.bind(this)}
+
+		{this.state.sendPopUp?
+		<Popup
 		title={this.state.popUpTitle}
-		desc={this.state.popUpDescription}
+		subtitle={this.state.popUpSubtitle}
+		handleClose={() => this.setState({sendPopUp: false})}
 		/>
+		:""}
 
 		<div style={{marginLeft:"20px", marginTop:"20px"}}>
 			<mui.Stack style={{marginTop: "10px"}} direction="row" spacing={1}>
@@ -179,7 +154,7 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 
 				{localStorage.getItem("foreignip") ?
 				<Link to="/system">
-					<mui.Button onClick={this.disconnect.bind(this)} variant="outlined" color="error">
+					<mui.Button onClick={() => localStorage.removeItem("foreignip")} variant="outlined" color="error">
 					DISCONNECT
 					</mui.Button>
 				</Link>
@@ -188,7 +163,6 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 					Reset IP
 				</mui.Button>
 				}
-				
 			</mui.Stack>
 
 			<mui.Stack style={{marginTop: "25px"}} direction="row" spacing={1}>

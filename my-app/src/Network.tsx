@@ -1,7 +1,8 @@
 import React from 'react'
+import * as mui from "@mui/material/"
+
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
-import * as mui from "@mui/material/"
 import Funcs from './Funcs'
 import Block from './data-display/Block'
 
@@ -22,7 +23,6 @@ class Network extends React.Component<{}, {ip_logins: any}>{
 		<div>
 		<mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
 		<mui.Paper elevation={0}>
-		
 		<Topbar />
 		<div style={{display: "flex"}}>
 		<Sidebar />
@@ -31,12 +31,12 @@ class Network extends React.Component<{}, {ip_logins: any}>{
 			<div>
 				<h2> Your Botnet </h2>
 				<Block
-				title='DDoSers'
-				subtitle='69'
+				primary='DDoSers'
+				secondary='69'
 				/>
 				<Block
-				title='Miners'
-				subtitle='42'
+				primary='Miners'
+				secondary='42'
 				/>
 			</div>
 
@@ -46,8 +46,8 @@ class Network extends React.Component<{}, {ip_logins: any}>{
 				{this.state.ip_logins != undefined ?
                 Object.keys(this.state.ip_logins).map((login) => (
 					<Block
-					title={this.state.ip_logins[login].ip}
-					subtitle={this.state.ip_logins[login].ip_password}
+					primary={this.state.ip_logins[login].ip}
+					secondary={this.state.ip_logins[login].ip_password}
 					canCopy={true}
 					/>
 				))

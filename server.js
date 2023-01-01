@@ -350,10 +350,12 @@ app.post('/v2/logs', RequestValidator, async function(req, res){
             res.end(JSON.stringify(argStatus))
             return
         }
-        res.end(JSON.stringify(await database.set_value(ctx.acting_as.username, "logs", req.body.logs)))
+        await database.set_value(ctx.acting_as.username, "logs", req.body.logs)
+        res.end(JSON.stringify({type: "OK", message: "Logs set."}))
     }
     if(req.body.type == "clear_logs"){
-        res.end(JSON.stringify(await database.set_value(ctx.acting_as.username, "logs", [])))
+        await database.set_value(ctx.acting_as.username, "logs", [])
+        res.end(JSON.stringify({type: "OK", message: "Logs cleared."}))
     }
 })
 

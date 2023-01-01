@@ -1,16 +1,22 @@
+import {useState} from 'react'
 import * as mui from "@mui/material/"
+import Snackbar from '../feedback/Snackbar'
 
 /**
  * Wraps around text like a box.
  * @param {string} primary Primary text - Big and bright.
  * @param {string} secondary Secondary text - Small and dull.
- * @param {string} tertiary Tertiary text - As secondary. Defaults to `null`
- * @param {string} color Border color. Defaults to `white`.
+ * @param {string} tertiary Tertiary text - As secondary. Default `null`
+ * @param {string} color Border color. Default `white`.
+ * @param {boolean} canCopy Allows copying the title on click. Default `false`.
  */
 const Block = ({primary="Title", secondary="Subtitle", tertiary=null, color="cyan", canCopy=false}) => {
-    const copy_text = () => {
+    let [notif, showNotif] = useState(false)
+
+    const copy_text = async () => {
         if(canCopy){
             navigator.clipboard.writeText(primary)
+            showNotif(true)
         }
     }
 
@@ -20,7 +26,8 @@ const Block = ({primary="Title", secondary="Subtitle", tertiary=null, color="cya
         onClick={copy_text}
         style={{
             marginBottom: "10px",
-            userSelect: 'none'
+            userSelect: 'none',
+            cursor: canCopy ? "pointer" : "normal"
         }}
         sx={{
         bgcolor: 'background.paper3',
@@ -38,6 +45,11 @@ const Block = ({primary="Title", secondary="Subtitle", tertiary=null, color="cya
             
             {tertiary?
             <mui.Box sx={{color: 'text.secondary'}}>{tertiary}</mui.Box>
+            :""
+            }
+
+            {notif?
+            <Snackbar message={`Copied ${primary}`} handleClose={() => showNotif(false)}/>
             :""
             }
 
