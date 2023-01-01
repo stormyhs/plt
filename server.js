@@ -350,10 +350,12 @@ app.post('/v2/logs', RequestValidator, async function(req, res){
             res.end(JSON.stringify(argStatus))
             return
         }
-        res.end(JSON.stringify(await database.set_value(ctx.acting_as.username, "logs", req.body.logs)))
+        await database.set_value(ctx.acting_as.username, "logs", req.body.logs)
+        res.end(JSON.stringify({type: "OK", message: "Logs set."}))
     }
     if(req.body.type == "clear_logs"){
-        res.end(JSON.stringify(await database.set_value(ctx.acting_as.username, "logs", [])))
+        await database.set_value(ctx.acting_as.username, "logs", [])
+        res.end(JSON.stringify({type: "OK", message: "Logs cleared."}))
     }
 })
 
@@ -464,6 +466,15 @@ app.post('/v2/system', RequestValidator, async function(req, res){
         res.end(JSON.stringify({type: "ERROR", message: "Unknown call type."}))
     }
 
+})
+
+app.post('/v2/network', RequestValidator, async function(req, res){
+    let ctx = await new Context(req).init()
+    
+    if(req.body.type == "get_ip_logins"){
+        res.end(JSON.stringify({type: "OK", ip_logins: ctx.acting_as.ip_logins}))
+        return
+    }
 })
 
 var server = app.listen(4444, function () {

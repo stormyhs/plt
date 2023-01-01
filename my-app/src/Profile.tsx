@@ -1,13 +1,12 @@
 import React from 'react'
+import * as mui from "@mui/material/"
+
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
-import * as mui from "@mui/material/"
 import Funcs from './Funcs'
-
 
 import TodayOutlinedIcon from '@mui/icons-material/TodayOutlined';
 import MemoryOutlinedIcon from '@mui/icons-material/MemoryOutlined';
-
 
 class Profile extends React.Component<{}, {creation_date: string, ip: any}>{
 	constructor(props: any){

@@ -1,9 +1,8 @@
 import React from 'react'
-import Sidebar from './Sidebar'
-import Topbar from './Topbar'
 import * as mui from "@mui/material/"
 
-
+import Sidebar from './Sidebar'
+import Topbar from './Topbar'
 
 class Switch extends React.Component<{name:String ,content:String,status: boolean, oncheck: Function}> {
 

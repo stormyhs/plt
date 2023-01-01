@@ -1,9 +1,11 @@
 import React from 'react'
+import * as mui from "@mui/material/"
+import {styled} from "@mui/material/styles"
+
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
-import * as mui from "@mui/material/"
-import {styled} from "@mui/material/styles"
+import Popup from './feedback/Popup'
 
 const CssTextField = styled(mui.TextField)({
 textAlign: "center",
@@ -26,49 +28,15 @@ let SaveButton = styled(mui.Button)({
     }
 })
 
-class Block extends React.Component<{title: string, subtitle?: string}, {}>{
-    handleClick(){
-
-    }
-
-    render(){
-    return(
-        <mui.Box style={{marginTop: "10px"}}
-        sx={{
-          bgcolor: 'gray',
-          boxShadow: 1,
-          borderRadius: 2,
-          p: 2,
-          minWidth: 200,
-          "&:hover": {
-            minWidth: 199,
-            borderLeft: 1,
-            borderColor: 'red'
-          }
-        }}
-        >
-        {this.props.title}
-        {this.props.subtitle ?
-        <mui.Box
-        sx={{
-          bgcolor: 'gray',
-          fontSize: 12
-        }}
-        >
-        {this.props.subtitle}
-        </mui.Box>
-         :
-        ""}
-        </mui.Box>
-    )
-    }
-}
-
-class Editor extends React.Component<{}, {filename: string, content: string, error: boolean}>{
+class Editor extends React.Component<{}, {filename: string, content: string, error: boolean, sendPopUp: boolean, popUpTitle: string, popUpSubtitle?: string | null}>{
     constructor(props: any){
         super(props)
-        this.state = {filename: "filename.ls", content: "Le code here", error: false}
+        this.state = {filename: "filename.ls", content: "Le code here", error: false, sendPopUp: false, popUpTitle: "", popUpSubtitle: ""}
     }
+
+	async sendPopUp(title: string, subtitle?: string){
+		this.setState({sendPopUp: true, popUpTitle: title, popUpSubtitle: subtitle ? subtitle : null})
+	}
 
     async componentDidMount(){
         if(window.location.href.split("?").length > 1){
@@ -90,9 +58,7 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
         
         let payload = {type: "add_file", file: {filename: filename, content: content}, username: localStorage.getItem("username")}    
         let r = await Funcs.request('/v2/storage', payload)
-        if(r.type !== "OK"){
-            this.setState({error: true})
-        }
+        await this.sendPopUp(r.type, r.message)
     }
 
 	render(){
@@ -100,6 +66,14 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
         <div>
             <mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
             <mui.Paper elevation={0}>
+            
+            {this.state.sendPopUp?
+            <Popup
+            title={this.state.popUpTitle}
+            subtitle={this.state.popUpSubtitle}
+            handleClose={() => this.setState({sendPopUp: false})}
+            />
+            :""}
             
             <Topbar />
                 <div style={{display: "flex"}}>

@@ -1,7 +1,8 @@
 import React from 'react';
-import Funcs from './Funcs'
 import * as mui from "@mui/material/"
 import {styled} from "@mui/material/styles"
+
+import Funcs from './Funcs'
 import './App.css';
 
 interface FuckOff{

@@ -560,9 +560,15 @@ module.exports = {
                 }
                 if(activity.startsWith("Cracking")){
                     await this.stop_task(user, task.origin, activity)
-                    console.log("activity:")
-                    console.log(activity)
-                    await this.add_file(user, {filename: `${activity.split(" ")[1]} password.txt`, content: await this.get_value(activity.split(" ")[1], "ip_password")})
+                    
+                    let ip = activity.split(" ")[1]
+                    await this.add_file(user, {filename: `${ip} password.txt`, content: await this.get_value(ip, "ip_password")})
+                    let ip_logins = await this.get_value(user, "ip_logins")
+                    if(ip_logins === undefined){
+                        ip_logins = {}
+                    }
+                    ip_logins[ip] = {ip: ip, ip_password: await this.get_value(ip, "ip_password")}
+                    await this.set_value(user, "ip_logins", ip_logins)
                 }
             }
         }
