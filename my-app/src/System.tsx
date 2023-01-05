@@ -130,14 +130,21 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
 
               <div style={{ marginLeft: '10vw' }}>
                 <h2>Running Tasks</h2>
-                {Object.keys(this.state.tasks).map((task) => (
+                {this.state.tasks.length == 0
+                ?
+                <mui.Skeleton variant="rounded">
+                    <Block primary="yeet" secondary='yeet'/>
+                </mui.Skeleton>
+                :
+                Object.keys(this.state.tasks).map((task) => (
                   <Task
                     key={this.state.tasks[task]}
                     label={this.state.tasks[task].origin}
                     title={this.activitiesToString(this.state.tasks[task])}
                     ETA={this.state.tasks[task].ETA}
                   />
-                ))}
+                ))
+                }
               </div>
 
             </div>

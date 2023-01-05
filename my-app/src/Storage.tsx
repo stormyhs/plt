@@ -351,7 +351,7 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
 
         <div style={{display: "grid", alignContent: "flex-start", gridTemplateColumns: "auto auto auto auto auto"}}>
 	        {
-	        this.state.files != null && this.state.files.length !== 0
+	        this.state.files.length !== 0
 	        ?
 	        (<>
 	            {this.state.files.map((file: any) =>{
@@ -366,7 +366,16 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
 	            })}
 	        </>)
 	        :
-	        ""
+	        <mui.Skeleton style={{marginTop: "10px", marginLeft: "10px"}} variant="rounded">
+            <><File
+              filename="file.filename"
+              content="file.content"
+              size="file.size"
+              version="file.version"
+              taskHandler="this.taskHandler"
+              fileStatus="this.fileStatus"
+            /></>
+          </mui.Skeleton>
 	        }
         </div>
 

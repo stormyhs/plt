@@ -9,7 +9,7 @@ import Block from './data-display/Block'
 class Network extends React.Component<{}, {ip_logins: any}>{
 	constructor(props: any){
 		super(props)
-		this.state = {ip_logins: []}
+		this.state = {ip_logins: undefined}
 	}
 
 	async componentDidMount(){
@@ -51,7 +51,11 @@ class Network extends React.Component<{}, {ip_logins: any}>{
 					canCopy={true}
 					/>
 				))
-				:""}
+				:
+				<mui.Skeleton variant="rounded">
+					<Block primary='yeet' secondary='yeet'/>
+				</mui.Skeleton>
+				}
 			</div>
 		</div>
 
