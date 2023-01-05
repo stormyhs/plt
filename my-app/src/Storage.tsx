@@ -10,6 +10,7 @@ import Funcs from './Funcs'
 import TextSnippetOutlinedIcon from '@mui/icons-material/TextSnippetOutlined';
 import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import Snackbar from './feedback/Snackbar';
 
 const CssTextField = styled(mui.TextField)({
 textAlign: "center",
@@ -59,31 +60,6 @@ function RenameDialog(props: any) {
   );
 }
 
-function PopUp(props: any) {
-  const { onClose, selectedValue, open, title, desc } = props;
-
-  const handleClose = () => {
-    onClose(selectedValue);
-  };
-
-  return (
-    <mui.Dialog onClose={handleClose} open={open}>
-      <div style={{marginLeft: "20px", marginRight: "20px"}}>
-      <mui.DialogTitle>
-        <mui.Typography variant="h5">
-          {props.title}
-        </mui.Typography>
-      </mui.DialogTitle>
-      <mui.DialogContent>
-        <mui.Typography variant="h6">
-          {props.desc}
-        </mui.Typography>
-      </mui.DialogContent>
-      </div>
-    </mui.Dialog>
-  );
-}
-
 class File extends React.Component<{filename: string, content: string, size: any, version?: any, taskHandler: any, fileStatus: any}, {open: boolean, name: string}>{
   constructor(props: any){
     super(props)
@@ -92,9 +68,7 @@ class File extends React.Component<{filename: string, content: string, size: any
   }
 
   async delete(){
-    console.log("Delete on " + this.props.filename);
-    let r = await Funcs.request('/v2/storage', {type: 'remove_file', file: this.props.filename, username: localStorage.getItem("username")})
-    console.log(r)
+    let r = await Funcs.request('/v2/storage', {type: 'remove_file', file: this.state.name})
     if(r.type === "OK"){
       (document.getElementById(this.props.filename) as HTMLElement).remove();
     }
@@ -223,10 +197,10 @@ class File extends React.Component<{filename: string, content: string, size: any
   }
 }
 
-class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: boolean, popUpTitle: string, popUpDescription: string}>{
+class Storage extends React.Component<{}, {files: any, tasks: any, message: string, sendSnackbar: boolean}>{
   constructor(props: any){
     super(props)
-    this.state = {files: [], tasks: {}, openPopUp: false, popUpTitle: "", popUpDescription: ""}
+    this.state = {files: [], tasks: {}, message: "", sendSnackbar: false}
     this.taskHandler = this.taskHandler.bind(this)
     this.fileStatus = this.fileStatus.bind(this)
   }
@@ -248,9 +222,9 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
         })
         
       if(r.type === "OK"){
-        this.setState({tasks: r.tasks})
+        this.setState({tasks: r.tasks, sendSnackbar: true, message: "Task started."})
       } else{
-        this.setState({openPopUp: true, popUpTitle: "ERROR", popUpDescription: r.message})
+        this.setState({sendSnackbar: true, message: `ERROR: ${r.message}`})
       }
     }
 
@@ -266,9 +240,9 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
       let r = await Funcs.request('/v2/system', payload)
 
       if(r.type === "OK"){
-        this.setState({tasks: r.newTasks})
+        this.setState({tasks: r.newTasks, sendSnackbar: true, message: "Task stopped."})
       } else{
-        this.setState({openPopUp: true, popUpTitle: "ERROR", popUpDescription: r.message})
+        this.setState({sendSnackbar: true, message: `ERROR: ${r.message}`})
       }
     }
 
@@ -281,9 +255,9 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
       })
 
       if(r.type === "OK"){
-        this.setState({tasks: r.tasks})
+        this.setState({tasks: r.tasks, sendSnackbar: true, message: `Upgrade started.`})
       } else{
-        this.setState({openPopUp: true, popUpTitle: "ERROR", popUpDescription: r.message})
+        this.setState({sendSnackbar: true, message: `ERROR: ${r.message}`})
       }
     }
 
@@ -296,9 +270,9 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
       })
 
       if(r.type === "OK"){
-        this.setState({tasks: r.newTasks})
+        this.setState({tasks: r.newTasks, sendSnackbar: true, message: `Upgrade stopped.`})
       } else{
-        this.setState({openPopUp: true, popUpTitle: "ERROR", popUpDescription: r.message})
+        this.setState({sendSnackbar: true, message: `ERROR: ${r.message}`})
       }
     }
 
@@ -329,7 +303,7 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
   }
 
   handleClose(){
-    this.setState({openPopUp: false})
+    this.setState({sendSnackbar: false})
   }
 
 	render(){
@@ -342,12 +316,12 @@ class Storage extends React.Component<{}, {files: any, tasks: any, openPopUp: bo
         <div style={{display: "flex"}}>
         <Sidebar />
         
-        <PopUp
-        open={this.state.openPopUp}
-        onClose={this.handleClose.bind(this)}
-        title={this.state.popUpTitle}
-        desc={this.state.popUpDescription}
+        {this.state.sendSnackbar?
+        <Snackbar
+          message={this.state.message}
+          handleClose={() => this.setState({sendSnackbar: false})}
         />
+        :""}
 
         <div style={{display: "grid", alignContent: "flex-start", gridTemplateColumns: "auto auto auto auto auto"}}>
 	        {

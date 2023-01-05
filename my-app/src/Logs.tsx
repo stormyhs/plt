@@ -39,8 +39,11 @@ class Logs extends React.Component<{}, {notif: string, sendNotif: boolean}>{
         let logs = (document.getElementById("logs") as HTMLTextAreaElement).value;
         let payload = {type: "set_logs", logs: logs, username: localStorage.getItem("username")}
         let r = await Funcs.request('/v2/logs', payload)
-
-        await this.sendSnackbar(`${r.type}: ${r.message}`)
+        if(r.type == "OK"){
+            await this.sendSnackbar("Logs saved.")
+        } else{
+            await this.sendSnackbar(`ERROR: ${r.message}`)
+        }
     }
 
     async clearLogs(){
@@ -49,9 +52,11 @@ class Logs extends React.Component<{}, {notif: string, sendNotif: boolean}>{
         let payload = {type: "clear_logs", username: localStorage.getItem("username")}
         let r = await Funcs.request('/v2/logs', payload)
 
-        await this.sendSnackbar(`${r.type}: ${r.message}`)
         if(r.type == "OK"){
             logs.value = ""
+            await this.sendSnackbar("Logs cleared.")
+        } else{
+            await this.sendSnackbar(`ERROR: ${r.message}`)
         }
     }
 

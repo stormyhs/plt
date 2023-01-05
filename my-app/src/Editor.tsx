@@ -5,7 +5,7 @@ import {styled} from "@mui/material/styles"
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
-import Popup from './feedback/Popup'
+import Snackbar from './feedback/Snackbar';
 
 const CssTextField = styled(mui.TextField)({
 textAlign: "center",
@@ -28,15 +28,11 @@ let SaveButton = styled(mui.Button)({
     }
 })
 
-class Editor extends React.Component<{}, {filename: string, content: string, error: boolean, sendPopUp: boolean, popUpTitle: string, popUpSubtitle?: string | null}>{
+class Editor extends React.Component<{}, {filename: string, content: string, error: boolean, sendSnackbar: boolean, message: string}>{
     constructor(props: any){
         super(props)
-        this.state = {filename: "filename.ls", content: "Le code here", error: false, sendPopUp: false, popUpTitle: "", popUpSubtitle: ""}
+        this.state = {filename: "filename.ls", content: "Le code here", error: false, sendSnackbar: false, message: ""}
     }
-
-	async sendPopUp(title: string, subtitle?: string){
-		this.setState({sendPopUp: true, popUpTitle: title, popUpSubtitle: subtitle ? subtitle : null})
-	}
 
     async componentDidMount(){
         if(window.location.href.split("?").length > 1){
@@ -52,13 +48,17 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
         }
     }
 
-    async handleClick(e: any){
+    async handleSave(e: any){
         let filename = (document.getElementById("filename") as HTMLInputElement).value;
         let content = (document.getElementById("content") as HTMLTextAreaElement).value;
         
         let payload = {type: "add_file", file: {filename: filename, content: content}, username: localStorage.getItem("username")}    
         let r = await Funcs.request('/v2/storage', payload)
-        await this.sendPopUp(r.type, r.message)
+        if(r.type == "OK"){
+            this.setState({sendSnackbar: true, message: "File saved."})
+        } else{
+            this.setState({sendSnackbar: true, message: `ERROR: ${r.message}`})
+        }
     }
 
 	render(){
@@ -67,11 +67,10 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
             <mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
             <mui.Paper elevation={0}>
             
-            {this.state.sendPopUp?
-            <Popup
-            title={this.state.popUpTitle}
-            subtitle={this.state.popUpSubtitle}
-            handleClose={() => this.setState({sendPopUp: false})}
+            {this.state.sendSnackbar?
+            <Snackbar
+            message={this.state.message}
+            handleClose={() => this.setState({sendSnackbar: false})}
             />
             :""}
             
@@ -92,7 +91,7 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
                         style={{marginLeft: "10px"}}
                         variant={this.state.error ? "contained" : "outlined"}
                         color='error'
-                        onClick={this.handleClick.bind(this)}>
+                        onClick={this.handleSave.bind(this)}>
                         Save
                     </SaveButton>
                     </div>
