@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from "react-router-dom";
 import * as mui from "@mui/material/"
 
-import './App.css'
+import '../App.css'
 
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import CloudOutlinedIcon from '@mui/icons-material/CloudOutlined';
@@ -17,16 +17,15 @@ import SettingsIcon from '@mui/icons-material/Settings';
 
 
 class Sidebar extends React.Component{
-	
   render(){
 	return(
-		<div>
+		<div style={{width: "150px"}}>
 		<mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
-		<mui.Paper elevation={0} style={{width: '100%', height: "100vh", borderRight: "white solid 1px"}}>
+		<mui.Paper elevation={4} style={{width: '100%', height: "100vh"}}>
 		<mui.List style={{marginLeft: "0"}}>
     	
       <Link to='/system'>
-    	<mui.MenuItem>
+    	<mui.MenuItem style={{marginTop: "30px"}}>
           <mui.ListItemIcon>
           	<DesktopWindowsOutlinedIcon/>
           </mui.ListItemIcon>
@@ -79,7 +78,8 @@ class Sidebar extends React.Component{
         </mui.MenuItem>
       </Link>
 
-        <mui.Divider/>
+    <mui.Divider/>
+    <mui.ListItemText style={{marginLeft: "5px", cursor: "default"}}>Your account</mui.ListItemText>
 
     <Link to='/profile'>
 		<mui.MenuItem>        
@@ -90,14 +90,15 @@ class Sidebar extends React.Component{
 		</mui.MenuItem>
     </Link>
 		
-    <Link to='/help'>
+
+    {/* <Link to='/help'>
 		<mui.MenuItem>        
           <mui.ListItemIcon>
           	<HelpOutlineOutlinedIcon/>
           </mui.ListItemIcon>
           <mui.ListItemText>Help</mui.ListItemText>
 		</mui.MenuItem>
-    </Link>
+    </Link> */}
 
     <Link to='/settings'>
     <mui.MenuItem>        

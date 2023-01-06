@@ -1,7 +1,7 @@
 import React from 'react'
 import * as mui from "@mui/material/"
 
-import Sidebar from './Sidebar'
+import Sidebar from './ui-components/Sidebar'
 import Topbar from './Topbar'
 import OurSwitch from './options/OurSwitch'
 import OurCheckbox from './options/OurCheckbox'

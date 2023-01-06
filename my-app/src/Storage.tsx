@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import * as mui from "@mui/material/"
 import {styled} from "@mui/material/styles"
 
-import Sidebar from './Sidebar'
+import Sidebar from './ui-components/Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import * as mui from "@mui/material/"
 
-import Sidebar from './Sidebar'
+import Sidebar from './ui-components/Sidebar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
 import Block from './data-display/Block'
