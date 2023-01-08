@@ -7,14 +7,7 @@ const session = require('express-session');
 
 var app = express();
 app.use(express.static('public'));
-app.use(cookieParser())
 app.use(express.json());
-app.use(session({
-    name: "Session",
-    secret: "secret",
-    httpOnly: false,
-    saveUninitialized: false
-}));
 app.use(cors({
     origin: 'http://localhost:3000',
     credentials: true
@@ -40,14 +33,40 @@ function checkArgs(req, args){
     return argStatus
 }
 
+function generateToken(length=32) {
+  let token = ''
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
+  for (let i = 0; i < length; i++) {
+    token += possible.charAt(Math.floor(Math.random() * possible.length))
+  }
+
+  return token
+}
+
+
 function unixTime(){
     return Math.round((new Date()).getTime() / 1000);
 }
 
-function RequestValidator(req, res, next){
-    if(req.session.login != true || req.session.username != req.body.username){
-        return res.end(JSON.stringify({type: "relog", message: "You are not logged in"}))
+async function RequestValidator(req, res, next){
+    if(!req.body.username){
+        return res.end(JSON.stringify({type: "relog", message: "Client did not provide a username"}))
     }
+    
+    let token = await database.get_value(req.body.username, "token")
+    if(!token.token){
+        return res.end(JSON.stringify({type: "relog", message: "Not logged in"}))
+    }
+
+    if(unixTime() > token.expire){
+        return res.end(JSON.stringify({type: "relog", message: "Token has expired"}))
+    }
+
+    if(req.body.token != token.token){
+        return res.end(JSON.stringify({type: "relog", message: "Incorrect token"}))
+    }
+
     next()
 }
 
@@ -87,13 +106,6 @@ class Context{
     }
 }
 
-app.post('/v2/test', RequestValidator, async function (req, res){
-    let ctx = await new Context(req).init()
-    let cracker = ctx.actor.files.find((el) => el.filename === "cracker.exe");
-    console.log(cracker)
-    res.end(JSON.stringify(ctx))
-})
-
 app.post('/api/news', async (req, res) =>{
     console.log(`Request: ${JSON.stringify(req.body)}`)
     res.end(JSON.stringify(
@@ -112,10 +124,16 @@ app.post('/api/login', async function(req, res){
     }
 
     let body = await database.login(req.body.username, req.body.password)
+
     if(body.type == "OK"){
-        req.session.login = true
-        req.session.username = req.body.username
+        let authToken = {
+            token: generateToken(),
+            expire: unixTime() + (60 * 60 * 24 * 7)
+        }
+        await database.set_value(req.body.username, "token", authToken)
+        body.token = authToken.token
     }
+
     res.end(JSON.stringify(body))
 })
 
@@ -129,15 +147,19 @@ app.post('/api/register', async function(req, res){
 
     let body = await database.register(req.body.username, req.body.password)
     if(body.type == "OK"){
-        req.session.login = true
-        req.session.username = req.body.username
+        let authToken = {
+            token: generateToken(),
+            expire: unixTime() + (60 * 60 * 24 * 7)
+        }
+        await database.set_value(req.body.username, "token", token)
+        body.token = authToken
     }
     res.end(JSON.stringify(body))
 })
 
-app.post('/api/logout', async function(req, res){
+app.post('/api/logout', RequestValidator, async function(req, res){
     console.log(`Request: ${JSON.stringify(req.body)}`)
-    req.session.destroy()
+    await database.set_value(req.body.username, "token", {})
     res.end(JSON.stringify({type: "OK"}))
 })
 
@@ -472,7 +494,7 @@ app.post('/v2/network', RequestValidator, async function(req, res){
     let ctx = await new Context(req).init()
     
     if(req.body.type == "get_ip_logins"){
-        res.end(JSON.stringify({type: "OK", ip_logins: ctx.acting_as.ip_logins}))
+        res.end(JSON.stringify({type: "OK", ip_logins: ctx.acting_as.ip_logins ? ctx.acting_as.ip_logins : []}))
         return
     }
 })

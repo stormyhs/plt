@@ -35,6 +35,7 @@ export class Login extends React.Component<{}, FuckOff>{
         if(r.type === "ERROR"){
             this.setState({error: true})
         } else{
+            localStorage.setItem("token", r.token)
             localStorage.setItem("username", r.username)
             window.location.assign("/home")
             this.setState({error: false})

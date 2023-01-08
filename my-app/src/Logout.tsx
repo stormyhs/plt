@@ -3,9 +3,10 @@ import Funcs from './Funcs'
 
 class Logout extends React.Component{
 	async componentDidMount(){
+		await Funcs.request('/api/logout', {})
 		localStorage.removeItem("username")
+		localStorage.removeItem("token")
 		localStorage.removeItem("foreignip")
-		console.log(await Funcs.request('/api/logout', {}))
 		window.location.assign("/")
 	}
 

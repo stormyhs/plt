@@ -1,8 +1,10 @@
 class Funcs{
     request = (async (endpoint: string, data: any) => {
-        if(data.username == null){
+        if(!data.username){
             data.username = localStorage.getItem("username")
         }
+        data.token = localStorage.getItem("token")
+
         if(localStorage.getItem("acting_as") != null){
             data.acting_as = localStorage.getItem("acting_as")
         }
