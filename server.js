@@ -55,7 +55,7 @@ async function RequestValidator(req, res, next){
     }
     
     let token = await database.get_value(req.body.username, "token")
-    if(!token.token){
+    if(!token || !token.token){
         return res.end(JSON.stringify({type: "relog", message: "Not logged in"}))
     }
 
