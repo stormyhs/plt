@@ -2,7 +2,7 @@ import React from 'react'
 import * as mui from "@mui/material/"
 
 import Sidebar from './ui-components/Sidebar'
-import Topbar from './Topbar'
+import MachinesBar from './ui-components/MachinesBar'
 import OurSwitch from './options/OurSwitch'
 import OurCheckbox from './options/OurCheckbox'
 import OurRadio from './options/OurRadio'
@@ -81,8 +81,8 @@ class Settings extends React.Component{
         <mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
         <mui.Paper elevation={0}>
         
-        <Topbar />
         <div style={{display: "flex"}}>
+        <MachinesBar />
         <Sidebar />
 
         <div>

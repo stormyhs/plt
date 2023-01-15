@@ -2,7 +2,7 @@ import React from 'react'
 import * as mui from "@mui/material/"
 
 import Sidebar from './ui-components/Sidebar'
-import Topbar from './Topbar'
+import MachinesBar from './ui-components/MachinesBar'
 import Funcs from './Funcs'
 import Block from './data-display/Block'
 
@@ -23,9 +23,10 @@ class Network extends React.Component<{}, {ip_logins: any}>{
 		<div>
 		<mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
 		<mui.Paper elevation={0}>
-		<Topbar />
+        
 		<div style={{display: "flex"}}>
-		<Sidebar />
+        <MachinesBar />
+        <Sidebar />
 
 		<div style={{display: 'grid', gridTemplateColumns: 'auto auto', gridTemplateRows: 'auto auto', marginLeft: "20px"}}>
 			<div>

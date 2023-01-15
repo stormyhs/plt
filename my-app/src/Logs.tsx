@@ -3,7 +3,7 @@ import * as mui from "@mui/material/"
 import {styled} from "@mui/material/styles"
 
 import Sidebar from './ui-components/Sidebar'
-import Topbar from './Topbar'
+import MachinesBar from './ui-components/MachinesBar'
 import Funcs from './Funcs'
 import Snackbar from './feedback/Snackbar'
 
@@ -73,8 +73,8 @@ class Logs extends React.Component<{}, {notif: string, sendNotif: boolean}>{
         />
         :""}
 
-        <Topbar />
         <div style={{display: "flex"}}>
+        <MachinesBar />
         <Sidebar />
 
         <div style={{marginLeft: "10px", marginTop: "15px"}}>

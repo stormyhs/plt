@@ -10,7 +10,6 @@ import LanOutlinedIcon from '@mui/icons-material/LanOutlined';
 import DesktopWindowsOutlinedIcon from '@mui/icons-material/DesktopWindowsOutlined';
 import NoteAltOutlinedIcon from '@mui/icons-material/NoteAltOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -23,7 +22,7 @@ class Sidebar extends React.Component{
 		<mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
 		<mui.Paper elevation={4} style={{width: '100%', height: "100vh"}}>
 		<mui.List style={{marginLeft: "0"}}>
-    	
+
       <Link to='/system'>
     	<mui.MenuItem style={{marginTop: "30px"}}>
           <mui.ListItemIcon>

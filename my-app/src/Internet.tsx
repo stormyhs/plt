@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import * as mui from "@mui/material/"
 
 import Sidebar from './ui-components/Sidebar'
-import Topbar from './Topbar'
+import MachinesBar from './ui-components/MachinesBar'
 import Funcs from './Funcs'
 import Popup from './feedback/Popup'
 
@@ -134,9 +134,9 @@ class Internet extends React.Component<{}, {ip: string, userInput: string, readm
 		<mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
 		<mui.Paper elevation={0}>
 		
-		<Topbar />
-		<div style={{display: "flex"}}>
-		<Sidebar />
+        <div style={{display: "flex"}}>
+        <MachinesBar />
+        <Sidebar />
 
 		{this.state.sendPopUp?
 		<Popup

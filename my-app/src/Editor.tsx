@@ -3,7 +3,7 @@ import * as mui from "@mui/material/"
 import {styled} from "@mui/material/styles"
 
 import Sidebar from './ui-components/Sidebar'
-import Topbar from './Topbar'
+import MachinesBar from './ui-components/MachinesBar'
 import Funcs from './Funcs'
 import Snackbar from './feedback/Snackbar';
 
@@ -74,9 +74,9 @@ class Editor extends React.Component<{}, {filename: string, content: string, err
             />
             :""}
             
-            <Topbar />
-                <div style={{display: "flex"}}>
-                <Sidebar />
+            <div style={{display: "flex"}}>
+            <MachinesBar />
+            <Sidebar />
 
                 <div style={{marginLeft: "20px", marginTop: "15px"}}>
                     <div style={{marginTop: "20px"}}>

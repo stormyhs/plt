@@ -1,7 +1,6 @@
 import React from 'react'
 import * as mui from "@mui/material/"
 
-import Topbar from './Topbar'
 import Sidebar from './ui-components/Sidebar'
 import MachinesBar from './ui-components/MachinesBar'
 import Funcs from './Funcs'
@@ -107,7 +106,6 @@ class System extends React.Component<{}, {hardware: any, tasks: any}>{
             <mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
             <mui.Paper elevation={0}>
             
-            {/* <Topbar /> */}
             <div style={{display: "flex"}}>
             <MachinesBar />
             <Sidebar />
