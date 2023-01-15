@@ -1,7 +1,8 @@
 import React from 'react'
 import * as mui from "@mui/material/"
 
-import Sidebar from './Sidebar'
+import Sidebar from './ui-components/Sidebar'
+import MachinesBar from './ui-components/MachinesBar'
 import Topbar from './Topbar'
 import Funcs from './Funcs'
 
@@ -28,8 +29,8 @@ class Profile extends React.Component<{}, {creation_date: string, ip: any}>{
 	<mui.Paper elevation={0}>
 
 
-	<Topbar />
 	<div style={{display: "flex"}}>
+	<MachinesBar />
 	<Sidebar />
 	
 	<div style = {{marginTop: '16px', marginLeft: '16px'}}>

@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import * as mui from "@mui/material/"
 import {styled} from "@mui/material/styles"
 
-import Sidebar from './Sidebar'
-import Topbar from './Topbar'
+import Sidebar from './ui-components/Sidebar'
+import MachinesBar from './ui-components/MachinesBar'
 import Funcs from './Funcs'
 
 import TextSnippetOutlinedIcon from '@mui/icons-material/TextSnippetOutlined';
@@ -312,8 +312,8 @@ class Storage extends React.Component<{}, {files: any, tasks: any, message: stri
         <mui.ThemeProvider theme={mui.createTheme({palette: {mode: "dark"}})}>
         <mui.Paper elevation={0}>
         
-        <Topbar />
         <div style={{display: "flex"}}>
+        <MachinesBar />
         <Sidebar />
         
         {this.state.sendSnackbar?

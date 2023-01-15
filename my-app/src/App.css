@@ -3,6 +3,7 @@ body{
   color: white;
   font-family: "Roboto", 'Courier New', Courier, monospace;
   overflow:hidden;
+  margin: 0;
 }
 
 a{
