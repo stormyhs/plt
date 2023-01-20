@@ -5,7 +5,7 @@ class Funcs{
         }
         data.token = localStorage.getItem("token")
 
-        if(localStorage.getItem("acting_as") != null){
+        if(data.acting_as == null && localStorage.getItem("acting_as") != null){
             data.acting_as = localStorage.getItem("acting_as")
         }
 

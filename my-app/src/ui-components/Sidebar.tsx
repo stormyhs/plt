@@ -24,7 +24,7 @@ class Sidebar extends React.Component{
 		<mui.List style={{marginLeft: "0"}}>
 
       <Link to='/system'>
-    	<mui.MenuItem style={{marginTop: "30px"}}>
+    	<mui.MenuItem style={{marginTop: "20px"}}>
           <mui.ListItemIcon>
           	<DesktopWindowsOutlinedIcon/>
           </mui.ListItemIcon>

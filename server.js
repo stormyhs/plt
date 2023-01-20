@@ -86,14 +86,17 @@ class Context{
             actor: await database.get_user(this.req.body.username)
         }
         
-        if(this.req.body.acting_as !== undefined){
+        if(this.req.body.acting_as !== undefined && this.req.body.acting_as != "localhost"){
             // TODO: validation
             ctx.acting_as = await database.get_user(this.req.body.acting_as)
+            if(!ctx.acting_as){
+                ctx.acting_as = await database.get_user(this.req.body.username)
+            }
         } else{
             ctx.acting_as = await database.get_user(this.req.body.username)
         }
 
-        ctx.log_actor = ctx.acting_as.ip
+        ctx.log_actor = ctx.actor.ip
         if(ctx.actor.ip == ctx.acting_as.ip){
             ctx.log_actor = "localhost"
         }
@@ -284,6 +287,7 @@ app.post('/v2/ip', RequestValidator, async function(req, res){
         }
 
         res.end(JSON.stringify(await database.get_ip_data(req.body.scan_ip)))
+        return
     }
 
     if(req.body.type == "crack_password"){
@@ -337,6 +341,7 @@ app.post('/v2/ip', RequestValidator, async function(req, res){
         let ETA = unixTime() + 15
         await database.add_log(ctx.acting_as.ip, `${ctx.log_actor} started cracking ${req.body.target}`)
         res.end(JSON.stringify(await database.start_task(ctx.acting_as.username, "cracker.exe", `Cracking ${req.body.target}`, ETA)))
+        return
     }
 
     if(req.body.type == "login"){
@@ -469,7 +474,7 @@ app.post('/v2/system', RequestValidator, async function(req, res){
 
         if(req.body.activity == "Running" || req.body.activity == "ALL"){
             logStr = "stopped task"
-        } else if(ctx.activity == "Upgrading"){
+        } else if(req.body.activity == "Upgrading"){
             logStr = "stopped upgrading"
         }
 
